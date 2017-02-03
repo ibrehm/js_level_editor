@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- Testing it again -->
 <html>
 	<head>
 		<link rel="stylesheet" href="css/level_editor.css">
