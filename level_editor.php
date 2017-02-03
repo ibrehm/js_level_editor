@@ -54,25 +54,6 @@
 <script src="./js/editor/level.js"></script>
 <script src="./js/editor/level_editor.js"></script>
 
-<?php
-	/*
-	function GetScript($str) {
-		echo("<script>");
-		
-		readfile($str);
-		
-		echo("</script>");
-	}
-	
-
-	GetScript("./js/List.js");
-	GetScript("./js/editor/settings.js");
-	GetScript("./js/editor/layers.js");
-	GetScript("./js/editor/level.js");
-	GetScript("./js/editor/level_editor.js");
-	*/
-	
-?>
 </body>
 
 </html>
