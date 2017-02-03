@@ -1,0 +1,175 @@
+.atlas {
+	width: 20px;
+    height: 20px;
+	background-image: url( '../img/texture_atlas.png' );
+	border-bottom: 1px solid black;
+	border-right: 1px solid black;
+	top: 0;
+	left: 0;
+}
+
+.pal_btn {
+	width: 20px;
+    height: 20px;
+	top: 0;
+	left: 0;
+}
+
+.pal_left {
+	background-image: url( '../img/palette_left.png' );
+}
+
+.pal_right {
+	background-image: url( '../img/palette_right.png' );
+}
+
+.save-btn {
+	background-image: url( '../img/save.png' );
+}
+
+.load-btn {
+	background-image: url( '../img/load.png' );
+}
+
+.start-btn {
+	background-image: url( '../img/start.png' );
+}
+
+.grid-on-off {
+	background-image: url( '../img/grid_on-off.png' );
+}
+
+.palette_full {
+	background-image: url( '../img/background_grid.png' );
+}
+
+.canvas_layers {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	border:0px solid #d3d3d3;
+	z-index: 0;
+}
+
+#container {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+}
+
+#palette_texture {
+	background-image: url('../img/texture_atlas.png');
+	overflow: hidden;
+}
+
+#palette_cover {
+	position: relative;
+	top: 0px;
+	left: 0px;
+	border-style: solid;
+	border-width: 1px;
+	background-color: rgba(255, 0, 0, 0.25);
+	pointer-events: none;
+}
+
+#canvas_container {
+	position: relative;
+	width: 1280px;
+	height: 720px;
+	overflow: hidden;
+	background-image: url( '../img/background_grid.png' );
+	background-position: left bottom;
+}
+
+#current_tile {
+	position: absolute;
+	bottom: 0px;
+	left: 0px;
+	z-index: 100;
+	border-style: solid;
+	border-width: 1px;
+	width: 20px;
+	height: 20px;
+	background-image: url( '../img/texture_atlas.png' );
+}
+
+#grid_overlay {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	width: 1280px;
+	height: 720px;
+	background-image: url( '../img/foreground_grid.png' );
+	background-position: left bottom;
+	z-index: 1;
+	pointer-events: none;
+}
+
+#palette_tab {
+	position: absolute;
+	top: 517px;
+	left: 0px;
+	width: 80px;
+	height: 20px;
+	background-image: url('../img/palette_tab.png');
+}
+
+/* ------------------------------------------------------------------- */
+/* Animations */
+
+@keyframes ani-palette_show {
+    0%   {top: -517px;}
+    100% {top: 0px;}
+}
+
+@keyframes ani-palette_hidden {
+    0%   {top: 0px;}
+    100% {top: -517px;}
+}
+
+.palette_hidden {
+	position: absolute;
+	animation: ani-palette_hidden 0.2s;
+	animation-fill-mode: forwards;
+	z-index: 2;
+}
+
+.palette_show {
+	position: absolute;
+	animation: ani-palette_show 0.2s;
+	animation-fill-mode: forwards;
+	z-index: 2;
+}
+
+.palette_settings {
+	display: flex;
+	position: absolute;
+	top: -517px;
+	width: 800px;
+	height: 517px;
+	background-color: #FFFFFF;
+	z-index: 2;
+}
+
+
+/* ------------------------------------------------------------------- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
