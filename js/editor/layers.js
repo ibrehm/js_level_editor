@@ -120,7 +120,7 @@ var LayerManager = function(){
 	};
 	//---------------------------------------------------------------------------------------------------------------
 	// Single Draw No Save. Draws a single tile to a canvas without touching the data.
-	Manager.prototype.SingleDrawNS = function(x, y, paint_tile, layer = 0) {
+	Manager.prototype.SingleDrawNS = function(x, y, paint_tile, layer) {
 		var main = this;
 		// Position of the tile relative to the canvas
 		var x_correct = x-Origins.getInstance().origin_x;
@@ -171,6 +171,7 @@ var LayerManager = function(){
 					un_x: x,
 					un_y: y,
 					un_mode: mode,
+					layer: layer,
 					un_tile: tile
 				};
 				
@@ -220,12 +221,13 @@ var LayerManager = function(){
 					un_left: max_left,
 					un_right: max_right,
 					un_tile: tile,
-					un_mode: mode
+					un_mode: mode,
+					layer: layer
 				};
 				
 			} else if(mode == DRAW_MODE_ROUND) {
 				
-				var rtile = main.Edge(x, y, tile);
+				var rtile = main.Edge(x, y, paint_tile, layer);
 				
 				if(rtile != null) {
 					main.SetDataXY(x, y, rtile, layer);
@@ -233,12 +235,13 @@ var LayerManager = function(){
 					var tile_x = rtile % TILES_PER_ROW;
 					var tile_y = parseInt(rtile / TILES_PER_ROW);
 					
-					main.SingleDrawNS(x, y, rtile);
+					main.SingleDrawNS(x, y, rtile, layer);
 					
 					var rtrn_undo = {
 						un_x: x,
 						un_y: y,
 						un_mode: mode,
+						layer: layer,
 						un_tile: tile
 					};
 				} else {
@@ -253,61 +256,49 @@ var LayerManager = function(){
 	//--------------------------------------------------------------
 	// Replaces the currently selected tile with a different one depending on it's surroundings.
 	// The purpose is to "round" the edges of maps.
-	Manager.prototype.Edge = function(x, y, tile) {
+	Manager.prototype.Edge = function(x, y, tile, layer) {
 		var main = this;
 		var rtrn = null;
 		
-		// When clicking on grass or water
-		if( (tile == 6) || (tile == 0) ) {
-			var dl = tile+1;
-			var dr = tile+2;
-			var ul = tile+3;
-			var ur = tile+4;
+		var selected = main.GetDataXY(x, y, layer);
 		
-			if( (main.GetDataXY(x, y-1) == 5) && (main.GetDataXY(x+1, y) == 5) ) {
-				rtrn = ul;
-			} else if( (main.GetDataXY(x, y+1) == 5) && (main.GetDataXY(x+1, y) == 5) ) {
-				rtrn = dl;
-			} else if( (main.GetDataXY(x, y-1) == 5) && (main.GetDataXY(x-1, y) == 5) ) {
-				rtrn = ur;
-			} else if( (main.GetDataXY(x, y+1) == 5) && (main.GetDataXY(x-1, y) == 5) ) {
-				rtrn = dr;
+		var found = 0;
+		var total = 0;
+		// Tracks the current iteration
+		var inc = 1;
+		
+		if(selected == tile) {
+			for(var j = -1; j <= 1; j+=2) {
+				for(var i = 1; i >= -1; i-=2) {
+					if( between(main.GetDataXY(x+i, y, layer), tile, tile+4) && between(main.GetDataXY(x, y+j, layer), tile, tile+4)) {
+						found = inc;
+						total++;
+					}
+					inc++;
+				}
 			}
-		// When clicking on sand
-		} else if(tile == 5) {
-			var dl = tile+1;
-			var dr = tile+2;
-			var ul = tile+3;
-			var ur = tile+4;
-			
-			// Check if grass
-			if( (main.GetDataXY(x, y-1) == 6) && (main.GetDataXY(x+1, y) == 6) ) {
-				rtrn = dr+1;
-			} else if( (main.GetDataXY(x, y+1) == 6) && (main.GetDataXY(x+1, y) == 6) ) {
-				rtrn = ur+1;
-			} else if( (main.GetDataXY(x, y-1) == 6) && (main.GetDataXY(x-1, y) == 6) ) {
-				rtrn = dl+1;
-			} else if( (main.GetDataXY(x, y+1) == 6) && (main.GetDataXY(x-1, y) == 6) ) {
-				rtrn = ul+1;
+		} else {
+			for(var j = -1; j <= 1; j+=2) {
+				for(var i = 1; i >= -1; i-=2) {
+					if( (main.GetDataXY(x+i, y, layer) == tile) && (main.GetDataXY(x, y+j, layer)== tile)) {
+						found = inc;
+						total++;
+					}
+					inc++;
+				}
 			}
-			// Check if water
-			//-------------------------------------------------------------------------------------------
-			else if( (main.GetDataXY(x, y-1) == 0) && (main.GetDataXY(x+1, y) == 0) ) {
-				rtrn = dr-5;
-			} else if( (main.GetDataXY(x, y+1) == 0) && (main.GetDataXY(x+1, y) == 0) ) {
-				rtrn = ur-5;
-			} else if( (main.GetDataXY(x, y-1) == 0) && (main.GetDataXY(x-1, y) == 0) ) {
-				rtrn = dl-5;
-			} else if( (main.GetDataXY(x, y+1) == 0) && (main.GetDataXY(x-1, y) == 0) ) {
-				rtrn = ul-5;
-			}
+		}
+		
+		// Only change the tile if ONE possible rounded edge is found
+		if(total == 1) {
+			rtrn = tile+found;
 		}
 		
 		return rtrn;
 	};
 	//---------------------------------------------------------------------------------------------------------------
 	// Obtains the tile ID at a specific X/Y coordinate
-	Manager.prototype.GetDataXY = function(x, y, layer = 0) {
+	Manager.prototype.GetDataXY = function(x, y, layer) {
 		if( (x >= 0 && x < MAP_SIZE) && (y >= 0 && y < MAP_SIZE) ) {
 			var location = x+(y*MAP_SIZE);
 			return this.local.layers[layer].data[location];
@@ -316,12 +307,23 @@ var LayerManager = function(){
 	};
 	//--------------------------------------------------------------
 	// Sets the tile ID at a specific X/Y coordinate
-	Manager.prototype.SetDataXY = function(x, y, num, layer = 0) {
+	Manager.prototype.SetDataXY = function(x, y, num, layer) {
 		if( (x >= 0 && x < MAP_SIZE) && (y >= 0 && y < MAP_SIZE) ) {
 			var location = x+(y*MAP_SIZE);
 			this.local.layers[layer].data[location] = num;
 		}
 	};
+	//--------------------------------------------------------------
+	// Compresses all layers and returns a binary string
+	Manager.prototype.ExportCompressed = function() {
+		
+	}
+	//--------------------------------------------------------------
+	// Takes in a compressed string and builds the data for the layers
+	Manager.prototype.LoadCompressed = function(data) {
+		
+	}
+	
 	return Manager;
 }();
 //-----------------------------------------------------------------------------------------------------------

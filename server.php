@@ -34,6 +34,12 @@ define("STAT_dark_def", $AutoNum->Next());
 
 define("STAT_total", $AutoNum->Next());
 
+function rawPost() {
+
+	return file_get_contents("php://input");
+
+}
+
 class Server {
 	//------------------------------------------------------------------------------------------------------------------------------------------
 	public function __construct() {
@@ -307,14 +313,17 @@ class Server {
 		$rtrn = "";
 		
 		$lv_name = $_POST['lv_name'];
-		$data = json_decode($_POST['data']);
+		//$data = json_decode($_POST['data']);
+		$data = $_POST['data'];
 		$data_write = "";
 		
-		$total = count($data);
+		//$total = count($data);
 		
-		for($i = 0; $i < $total; $i++) {
-			$data_write .=  pack("i", $data[$i]);
-		}
+		
+		//for($i = 0; $i < $total; $i++) {
+		//	$data_write .=  pack("i", $data[$i]);
+		//}
+		$data_write .= $data;
 		$data_write .= pack("i", $_POST['start_x']);
 		$data_write .= pack("i", $_POST['start_y']);
 		
@@ -324,7 +333,6 @@ class Server {
 	}
 	//------------------------------------------------------------------------------------------------------------------------------------------
 	private function load_level() {
-		$rtrn = "loaded from php!";
 		
 		$lv_name = $_POST['lv_name'];
 		

@@ -22,6 +22,14 @@
 				<br><button id='add_layer' type='button'>Add Layer</button>
 				<br><button id='remove_layer' type='button'>Remove Layer</button>
 				<br>Target Layer:<input id="target_layer" type="number" value="0">
+				<div id="layer-list">
+					<form>
+						<input type="radio" name="layer-selected" value=0 checked>Layer 0 <input type="checkbox" checked><br>
+						<input type="radio" name="layer-selected" value=1>Layer 1 <input type="checkbox" checked><br>
+						<input type="radio" name="layer-selected" value=2>Layer 2 <input type="checkbox" checked><br>
+						<input type="radio" name="layer-selected" value=3>Layer 3 <input type="checkbox" checked><br>
+					</form>
+				</div>
 			</div>
 			<div id="palette_tab"></div>
 		</div>
@@ -47,7 +55,9 @@
 	</div>
 </div>
 
+<script src="./js/include/pako/pako.min.js"></script>
 <script src="./js/List.js"></script>
+<script src="./js/utils.js"></script>
 <script src="./js/editor/managers.js"></script>
 <script src="./js/editor/settings.js"></script>
 <script src="./js/editor/layers.js"></script>
