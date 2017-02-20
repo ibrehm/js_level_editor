@@ -1,13 +1,20 @@
 //---------------------------------------------------------------
-function Node() {
-	self = this;
-	
-	self.data = null;
-	self.Next = null;
-	self.Prev = null;
-}
-//---------------------------------------------------------------
+// A Linked List library. Usage example:
+//
+// var list = new List();
+// list.push_back(50);     // Adds '50' to the list
+// list.get(0);            // Get the element in position 0. Returns 50.
+// list.remove(0);         // Deletes the number. Could also have used list.pop_back() in this case.
 function List() {
+	
+	//---------------------------------------------------------------
+	function Node() {
+		self = this;
+		
+		self.data = null;
+		self.Next = null;
+		self.Prev = null;
+	}
 	
 	var self = this;
 	
@@ -18,7 +25,7 @@ function List() {
 	var end = null;
 	this.length = 0;
 	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
-	
+	// Finds an object based on the desired location
 	function GetObj(location) {
 		
 		if(location != iterator) {
@@ -122,6 +129,8 @@ function List() {
 		this.length++;
 	};
 	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+	// Insert an element into a given position. It will be added
+	// to the end if the position is out of range.
 	self.insert = function(pos, obj) {
 		if((this.length == 0) || (pos == 0)) {
 			this.push_front(obj);
@@ -158,6 +167,7 @@ function List() {
 		}
 	};
 	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+	// Removes an element at the given position.
 	self.remove = function(location) {
 		var obj = GetObj(location);
 		
@@ -197,29 +207,35 @@ function List() {
 		}
 	};
 	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+	// Removes the element at the end of the list
 	self.pop_back = function() {
 		var pos = this.length-1;
 		this.remove(pos);
 	};
 	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+	// Removes the element at the front of the list
 	self.pop_front = function() {
 		this.remove(0);
 	}
 	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+	// Deletes all data
 	self.Clear = function() {
 		while(this.length > 0) {
 			this.remove(0);
 		}
 	};
 	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+	// Obtain the data at a given position
 	self.get = function(location) {
 		return GetObj(location).data;
 	};
 	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+	// Set the data at a given position
 	self.set = function(location, value) {
 		GetObj(location).data = value;
 	};
 	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+	// Find the first occurence of a value within the list
 	self.find = function(value) {
 		
 		var rtrn = -1;
@@ -239,6 +255,7 @@ function List() {
 		
 	};
 	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+	// Build an array equivilant to the list
 	self.generateArray = function() {
 		var rtrn = [];
 		var obj = front;
@@ -253,6 +270,7 @@ function List() {
 		return rtrn;
 	};
 	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+	// Take in an array of data and build the list
 	self.appendArray = function(array) {
 		var i = 0;
 		while(i < array.length) {
