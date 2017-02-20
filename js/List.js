@@ -8,7 +8,8 @@ function Node() {
 }
 //---------------------------------------------------------------
 function List() {
-	self = this;
+	
+	var self = this;
 	
 	var iterator = -1;
 	
@@ -18,43 +19,70 @@ function List() {
 	this.length = 0;
 	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
 	
-	function GetObj(pos) {
-		var count = 0;
-		var obj = front;
-		var direction = 1;
+	function GetObj(location) {
 		
-		alert(self.length);
-		
-		if(location > (self.length/2) ) {
-			count = (self.length-1);
-			obj = end;
-			direction = -1;
-		}
-		
-		var check = (location >= 0) && (location < self.length);
-		
-		if( (front != null) && check) {
+		if(location != iterator) {
 			
-			while(true) {
-				if(count == location) {
-					break;
-				} else {
-					if(direction == -1) {
-						obj = obj.Prev;
-					} else {
-						obj = obj.Next;
-					}
-					count += direction;
-				}
+			var count = 0;
+			var obj = front;
+			var direction = 1;
+			
+			// Find nearest nodes out of front/end/current
+			var start = Infinity;
+			if(Math.abs(location - 0) < start) {
+				obj = front;
+				start = Math.abs(location - 0);
 			}
 			
+			if(Math.abs(location - self.length) < start) {
+				obj = end;
+				start = Math.abs(location - (self.length-1));
+				count = (self.length-1);
+			}
+			
+			if(Math.abs(location - iterator) < start) {
+				obj = current;
+				start = Math.abs(location - iterator);
+				count = iterator;
+			}
+			
+			// Go backwards if it's lower
+			if(location < count ) {
+				direction = -1;
+			}
+			
+			var check = (location >= 0) && (location < self.length);
+			
+			if( (front != null) && check) {
+				
+				while(true) {
+					if(count == location) {
+						break;
+					} else {
+						if(direction == -1) {
+							obj = obj.Prev;
+						} else {
+							obj = obj.Next;
+						}
+						count += direction;
+					}
+				}
+				
+			}
+			current = obj;
+			iterator = location;
 		}
 		
-		return obj;
-	}
+		return current;
+	};
 	
 	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
-	
+	// Return's the current position of the iterator
+	self.itrPos = function() {
+		return iterator;
+	};
+	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+	// Adds an element to the back
 	self.push_back = function(obj) {
 		var temp = new Node();
 		
@@ -71,8 +99,9 @@ function List() {
 		
 		temp.data = obj;
 		this.length++;
-	}
+	};
 	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+	// Adds an element to the front
 	self.push_front = function(obj) {
 		var temp = new Node();
 		
@@ -85,11 +114,13 @@ function List() {
 			temp.Next = front;
 			
 			front = temp;
+			
+			iterator++;
 		}
 		
 		temp.data = obj;
 		this.length++;
-	}
+	};
 	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
 	self.insert = function(pos, obj) {
 		if((this.length == 0) || (pos == 0)) {
@@ -114,6 +145,10 @@ function List() {
 						
 						this.length++;
 						
+						if(pos <= iterator) {
+							iterator++;
+						}
+						
 						break;
 					}
 					finder = finder.Next;
@@ -121,104 +156,69 @@ function List() {
 				}
 			}
 		}
-	}
+	};
 	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
 	self.remove = function(location) {
-		var count = 0;
-		var obj = front;
-		var direction = 1;
+		var obj = GetObj(location);
 		
-		if(location > (this.length/2) ) {
-			count = (this.length-1);
-			obj = end;
-			direction = -1;
-		}
-		
-		var check = (location >= 0) && (location < this.length);
-		
-		if( (front != null) && check) {
-			
-			while((count < this.length) && (count >= 0)) {
-				if(count == location) {
-					if(this.length > 1) {
-						if(count == 0) {
-							front = obj.Next;
-							front.Prev = null;
-						} else if(count == (this.length-1)) {
-							end = obj.Prev;
-							end.Next = null;
-						} else {
-							obj.Next.Prev = obj.Prev;
-							obj.Prev.Next = obj.Next;
-						}
-					}
-					
-					delete obj;
-					this.length--;
-					
-					break;
+		if(obj != null) {
+			if(location < iterator) {
+				iterator--;
+				if(iterator < 0) {
+					current = null;
 				}
-				if(direction == -1) {
-					obj = obj.Prev;
+			} else if(location == iterator) {
+				if(current.Next != null) {
+					current = obj.Next;
+				} else if(current.Prev != null) {
+					iterator--;
+					current = current.Prev;
 				} else {
-					obj = obj.Next;
+					current = null;
+					iterator = -1;
 				}
-				count += direction;
 			}
 			
+			if(this.length > 1) {
+				if(location == 0) {
+					front = obj.Next;
+					front.Prev = null;
+				} else if(location == (this.length-1)) {
+					end = obj.Prev;
+					end.Next = null;
+				} else {
+					obj.Next.Prev = obj.Prev;
+					obj.Prev.Next = obj.Next;
+				}
+			}
+			
+			delete obj;
+			this.length--;
 		}
-	}
+	};
 	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
 	self.pop_back = function() {
 		var pos = this.length-1;
 		this.remove(pos);
+	};
+	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+	self.pop_front = function() {
+		this.remove(0);
 	}
 	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
 	self.Clear = function() {
 		while(this.length > 0) {
 			this.remove(0);
 		}
-	}
+	};
 	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
 	self.get = function(location) {
-		//var obj = GetObj(location);
-		
-		var count = 0;
-		var obj = front;
-		var direction = 1;
-		
-		if(location > (this.length/2) ) {
-			count = (this.length-1);
-			obj = end;
-			direction = -1;
-		}
-		
-		var check = (location >= 0) && (location < this.length);
-		
-		if( (front != null) && check) {
-			
-			while(true) {
-				if(count == location) {
-					break;
-				} else {
-					if(direction == -1) {
-						obj = obj.Prev;
-					} else {
-						obj = obj.Next;
-					}
-					count += direction;
-				}
-			}
-			
-		}
-		
-		return obj.data;
-	}
+		return GetObj(location).data;
+	};
 	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
 	self.set = function(location, value) {
-		var obj = GetObj(location);
-		obj.data = value;
-	}
+		GetObj(location).data = value;
+	};
 	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
 	self.find = function(value) {
 		
@@ -237,7 +237,7 @@ function List() {
 		
 		return rtrn;
 		
-	}
+	};
 	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
 	self.generateArray = function() {
 		var rtrn = [];
@@ -251,7 +251,7 @@ function List() {
 		}
 		
 		return rtrn;
-	}
+	};
 	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
 	self.appendArray = function(array) {
 		var i = 0;
@@ -259,7 +259,7 @@ function List() {
 			this.push_back(array[i]);
 			i++;
 		}
-	}
+	};
 }
 //---------------------------------------------------------------
 

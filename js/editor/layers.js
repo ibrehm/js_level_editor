@@ -5,6 +5,9 @@ var Layer = function(num, imgUrl, default_val = 0) {
 	this.atlas = new Image();
 	this.atlas.src = imgUrl;
 	
+	this.ctx;
+	this.elem;
+	
 	this.drawRecord = new Int16Array( VIEWPORT_TILE_WIDTH * VIEWPORT_TILE_HEIGHT );
 	this.data = new Int32Array( MAP_SIZE * MAP_SIZE );
 	this.data.fill(default_val);
@@ -12,9 +15,6 @@ var Layer = function(num, imgUrl, default_val = 0) {
 	for(var i = 0; i < this.drawRecord.length; i++) {
 		this.drawRecord[i] = -1;
 	}
-	
-	this.ctx;
-	this.elem;
 	
 	$('#level_canvas').append(
 		"<canvas id='canvas_layer-" + num + "' class='canvas_layers' width='" + VIEWPORT_WIDTH + "' height='" + VIEWPORT_HEIGHT + "'>Your browser does not support the HTML5 canvas tag.</canvas>"
@@ -29,7 +29,7 @@ var LayerManager = function(){
 	var Manager = function() {
 		var self = this;
 		this.local = {
-			layers: [],
+			layers: new List(),
 			counter: 0
 		}
 	};
@@ -38,15 +38,15 @@ var LayerManager = function(){
 	// Obtains the last known tile drawn to a specific X/Y coordinate in a layer
 	Manager.prototype.GetTileRecord = function(x, y, layer) {
 		var selected = x+(y*VIEWPORT_TILE_WIDTH);
-		return this.local.layers[layer].drawRecord[selected];
+		return this.local.layers.get(layer).drawRecord[selected];
 	};
 	//---------------------------------------------------------------------------------------------------------------
 	// Sets the tile record in a specific X/Y coordinate in a layer
 	Manager.prototype.SetTileRecord = function(x, y, layer, tile) {
 		if( (x >= 0) && (x < VIEWPORT_TILE_WIDTH) && (y >= 0) && (y < VIEWPORT_TILE_HEIGHT) ) {
 			var selected = x+(y*VIEWPORT_TILE_WIDTH);
-			var length = this.local.layers[layer].drawRecord.length;
-			this.local.layers[layer].drawRecord[selected] = tile;
+			var length = this.local.layers.get(layer).drawRecord.length;
+			this.local.layers.get(layer).drawRecord[selected] = tile;
 		}
 	};
 	//---------------------------------------------------------------------------------------------------------------
@@ -86,9 +86,9 @@ var LayerManager = function(){
 		var main = this;
 		
 		var newID = this.local.layers.length;
-		this.local.layers[newID] = new Layer(this.local.layers.length, imgUrl, default_val);
+		this.local.layers.push_back(new Layer(this.local.layers.length, imgUrl, default_val));
 		
-		this.local.layers[newID].atlas.onload = function() {
+		this.local.layers.get(newID).atlas.onload = function() {
 			main.Update();
 		}
 		
@@ -97,19 +97,19 @@ var LayerManager = function(){
 	//---------------------------------------------------------------------------------------------------------------
 	// Deletes the most recently added layer
 	Manager.prototype.pop_back = function() {
-		var deletion = this.local.layers.length-1;
-		
-		this.local.layers[deletion].elem.remove();
-		delete this.local.layers[deletion];
-		
-		this.local.layers.length--;
+		if(this.local.layers.length > 0) {
+			var deletion = this.local.layers.length-1;
+			
+			this.local.layers.get(deletion).elem.remove();
+			this.local.layers.remove(deletion);
+		}
 	};
 	//---------------------------------------------------------------------------------------------------------------
 	// Returns the element (<canvas>) associated with the specified layer
 	Manager.prototype.rtrnLayer = function(num) {
 		if( (num >= 0) && (num < this.local.layers.length) ) {
 			//return this.local.layers[num].ctx;
-			return this.local.layers[num];
+			return this.local.layers.get(num);
 		}
 		return null;
 	};
@@ -128,7 +128,7 @@ var LayerManager = function(){
 		
 		if(main.local.layers.length >= layer) {
 				
-			main.local.layers[layer].ctx.clearRect(x_correct*TILE_SIZE, y_correct*TILE_SIZE, TILE_SIZE, TILE_SIZE);
+			main.local.layers.get(layer).ctx.clearRect(x_correct*TILE_SIZE, y_correct*TILE_SIZE, TILE_SIZE, TILE_SIZE);
 
 			if( ( (x >= 0) && (x < MAP_SIZE) ) && ( (y >= 0) && (y < MAP_SIZE) ) ) {
 				
@@ -137,12 +137,12 @@ var LayerManager = function(){
 					var tile_y = parseInt(paint_tile / TILES_PER_ROW);
 				
 					//main.local.ctx.putImageData(main.local.atlasData, (x_correct*TILE_SIZE)-(paint_tile*TILE_SIZE), (y_correct*TILE_SIZE), (tile_x*TILE_SIZE), (tile_y*TILE_SIZE), TILE_SIZE, TILE_SIZE);
-					main.local.layers[layer].ctx.drawImage(main.local.layers[layer].atlas, tile_x*TILE_SIZE, tile_y*TILE_SIZE, TILE_SIZE, TILE_SIZE, x_correct*TILE_SIZE, y_correct*TILE_SIZE, TILE_SIZE, TILE_SIZE);
+					main.local.layers.get(layer).ctx.drawImage(main.local.layers.get(layer).atlas, tile_x*TILE_SIZE, tile_y*TILE_SIZE, TILE_SIZE, TILE_SIZE, x_correct*TILE_SIZE, y_correct*TILE_SIZE, TILE_SIZE, TILE_SIZE);
 				}
 				this.SetTileRecord(x_correct, y_correct, layer, paint_tile);
 				
 				if(x == main.local.start_x && y == main.local.start_y) {
-					main.local.layers[layer].ctx.drawImage(main.local.start_img, 0, 0, TILE_SIZE, TILE_SIZE, x_correct*TILE_SIZE, y_correct*TILE_SIZE, TILE_SIZE, TILE_SIZE);
+					main.local.layers.get(layer).ctx.drawImage(main.local.start_img, 0, 0, TILE_SIZE, TILE_SIZE, x_correct*TILE_SIZE, y_correct*TILE_SIZE, TILE_SIZE, TILE_SIZE);
 				}
 			}
 		}
@@ -301,7 +301,7 @@ var LayerManager = function(){
 	Manager.prototype.GetDataXY = function(x, y, layer) {
 		if( (x >= 0 && x < MAP_SIZE) && (y >= 0 && y < MAP_SIZE) ) {
 			var location = x+(y*MAP_SIZE);
-			return this.local.layers[layer].data[location];
+			return this.local.layers.get(layer).data[location];
 		}
 		return -1;
 	};
@@ -310,7 +310,7 @@ var LayerManager = function(){
 	Manager.prototype.SetDataXY = function(x, y, num, layer) {
 		if( (x >= 0 && x < MAP_SIZE) && (y >= 0 && y < MAP_SIZE) ) {
 			var location = x+(y*MAP_SIZE);
-			this.local.layers[layer].data[location] = num;
+			this.local.layers.get(layer).data[location] = num;
 		}
 	};
 	//--------------------------------------------------------------
