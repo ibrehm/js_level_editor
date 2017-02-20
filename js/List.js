@@ -5,16 +5,16 @@
 // list.push_back(50);     // Adds '50' to the list
 // list.get(0);            // Get the element in position 0. Returns 50.
 // list.remove(0);         // Deletes the number. Could also have used list.pop_back() in this case.
-function List() {
+//---------------------------------------------------------------
+function Node() {
+	self = this;
 	
-	//---------------------------------------------------------------
-	function Node() {
-		self = this;
-		
-		self.data = null;
-		self.Next = null;
-		self.Prev = null;
-	}
+	self.data = null;
+	self.Next = null;
+	self.Prev = null;
+}
+//---------------------------------------------------------------
+function List() {
 	
 	var self = this;
 	
