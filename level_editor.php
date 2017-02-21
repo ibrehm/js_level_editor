@@ -21,15 +21,10 @@
 				<br>Height:<input id="selector_height" type="number" min="1" max="9" value="1">
 				<br><button id='add_layer' type='button'>Add Layer</button>
 				<br><button id='remove_layer' type='button'>Remove Layer</button>
-				<br>Target Layer:<input id="target_layer" type="number" value="0">
-				<div id="layer-list">
-					<form>
-						<input type="radio" name="layer-selected" value=0 checked>Layer 0 <input type="checkbox" checked><br>
-						<input type="radio" name="layer-selected" value=1>Layer 1 <input type="checkbox" checked><br>
-						<input type="radio" name="layer-selected" value=2>Layer 2 <input type="checkbox" checked><br>
-						<input type="radio" name="layer-selected" value=3>Layer 3 <input type="checkbox" checked><br>
-					</form>
-				</div>
+				
+				<form id="layer-list">
+				</form>
+				
 			</div>
 			<div id="palette_tab"></div>
 		</div>
@@ -51,7 +46,8 @@
 		<span id='load_hide'><br><select id="level_list"></select><input id="load-btn" type=submit value="Load"></span>
 		<span id='save_hide'><br>Level Name: <input id="level_name" type="text"> <input id="save-btn" type=submit value="Save"></span>
 		<span id="debug"></span>
-		<span id="debugii"></span>
+		<br><span id="debugii"></span>
+		<br><span id="debugiii"></span>
 	</div>
 </div>
 

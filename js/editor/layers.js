@@ -28,8 +28,11 @@ var Layer = function(num, imgUrl, default_val = 0) {
 var LayerManager = function(){
 	var Manager = function() {
 		var self = this;
+		// layerCount tracks the amount of layers created (Never resets)
+		// counter current tracks the amount of tiles drawn per screen Update
 		this.local = {
 			layers: new List(),
+			layerCount: 0,
 			counter: 0
 		}
 	};
@@ -81,27 +84,45 @@ var LayerManager = function(){
 		
 	};
 	//---------------------------------------------------------------------------------------------------------------
+	Manager.prototype.hideShow = function(layer) {
+		//this.local.layers.get(layer).elem;
+	}
+	//---------------------------------------------------------------------------------------------------------------
 	// Adds a new layer. The ID of the layer created is returned.
 	Manager.prototype.push_back = function(imgUrl, default_val = 0) {
 		var main = this;
 		
-		var newID = this.local.layers.length;
-		this.local.layers.push_back(new Layer(this.local.layers.length, imgUrl, default_val));
+		var newID = main.local.layerCount;
+		
+		$('#layer-list').append(
+			"<span class='layer-tool'>" +
+			"	<input class='layer-select' type='radio' name='layer-select' value=" + this.local.layers.length + ">Layer " + this.local.layers.length +
+			"<input class='layer-toggle' type='checkbox' checked data-layer=" + this.local.layers.length + "><br>" +
+			"</span>"
+		);
+		
+		this.local.layers.push_back(new Layer(newID, imgUrl, default_val));
 		
 		this.local.layers.get(newID).atlas.onload = function() {
 			main.Update();
 		}
+		
+		this.local.layerCount++;
 		
 		return(newID);
 	};
 	//---------------------------------------------------------------------------------------------------------------
 	// Deletes the most recently added layer
 	Manager.prototype.pop_back = function() {
-		if(this.local.layers.length > 0) {
-			var deletion = this.local.layers.length-1;
+		var main = this;
+		if(main.local.layers.length > 0) {
+			var deletion = main.local.layers.length-1;
 			
-			this.local.layers.get(deletion).elem.remove();
-			this.local.layers.remove(deletion);
+			main.local.layers.get(deletion).elem.remove();
+			main.local.layers.remove(deletion);
+			
+			var layerList = $('.layer-tool');
+			layerList[layerList.length-1].remove();
 		}
 	};
 	//---------------------------------------------------------------------------------------------------------------
@@ -111,6 +132,7 @@ var LayerManager = function(){
 			//return this.local.layers[num].ctx;
 			return this.local.layers.get(num);
 		}
+		
 		return null;
 	};
 	//---------------------------------------------------------------------------------------------------------------

@@ -31,8 +31,8 @@ function List() {
 		if(location != iterator) {
 			
 			var count = 0;
-			var obj = front;
 			var direction = 1;
+			var obj = null;
 			
 			// Find nearest nodes out of front/end/current
 			var start = Infinity;
@@ -41,7 +41,7 @@ function List() {
 				start = Math.abs(location - 0);
 			}
 			
-			if(Math.abs(location - self.length) < start) {
+			if(Math.abs(location - (self.length-1)) < start) {
 				obj = end;
 				start = Math.abs(location - (self.length-1));
 				count = (self.length-1);
@@ -49,7 +49,6 @@ function List() {
 			
 			if(Math.abs(location - iterator) < start) {
 				obj = current;
-				start = Math.abs(location - iterator);
 				count = iterator;
 			}
 			
@@ -58,11 +57,13 @@ function List() {
 				direction = -1;
 			}
 			
-			var check = (location >= 0) && (location < self.length);
+			var check = ((location >= 0) && (location < self.length));
+			
 			
 			if( (front != null) && check) {
 				
 				while(true) {
+					
 					if(count == location) {
 						break;
 					} else {
@@ -73,11 +74,11 @@ function List() {
 						}
 						count += direction;
 					}
-				}
+				};
 				
 			}
 			current = obj;
-			iterator = location;
+			iterator = count;
 		}
 		
 		return current;
@@ -97,6 +98,7 @@ function List() {
 			front = temp;
 			current = temp;
 			end = temp;
+			iterator = 0;
 		} else {
 			end.Next = temp;
 			temp.Prev = end;

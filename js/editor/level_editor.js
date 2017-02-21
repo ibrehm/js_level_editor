@@ -93,10 +93,14 @@ $(document).ready( function() {
 					});
 				});
 				//---------------------------------------------------------------------------------------------------------------
-				$('#target_layer').on('change', function(event) {
-					var value = $(this).val();
-					
+				$("#layer-list").on('change', "input:radio[name='layer-select']:checked", function(event) {
+					var value = parseInt($(this).val());
+						
 					local.target_layer = value;
+				});
+				
+				$('#layer-list').on('change', '.layer-toggle', function(event) {
+					var value = $(this).data('layer');
 				});
 				//---------------------------------------------------------------------------------------------------------------
 				$('#palette_texture').mousemove( function(event) {
@@ -259,9 +263,28 @@ $(document).ready( function() {
 				//---------------------------------------------------------------------------------------------------------------
 				$('#add_layer').on('click', function(event) {
 					local.map.AddLayer();
+					/*
+					$("input:radio[name='layer-select']:checked").on('change', function(event) {
+						var value = $(this).val();
+						
+						alert(value);
+						
+						local.target_layer = value;
+					});
+					*/
 				});
 				//---------------------------------------------------------------------------------------------------------------
 				$('#remove_layer').on('click', function(event) {
+					
+					var layers = $('.layer-tool');
+					
+					if( (layers.length-1) == local.target_layer) {
+						if(local.target_layer > 0) {
+							local.target_layer--;
+							$("input[name=layer-select]").val([local.target_layer]);
+						}
+					}
+					
 					local.map.RemoveLayer();
 				});
 				//---------------------------------------------------------------------------------------------------------------

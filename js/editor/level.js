@@ -16,34 +16,11 @@ var Level = function() {
 	
 	var id = local.layers.push_back("./img/texture_atlas.png");
 	
-	//local.atlas.src = "./img/texture_atlas.png";
 	local.start_img.src = "./img/start.png";
 	
 	local.data = new Array(MAP_SIZE*MAP_SIZE);
 	
-	//local.atlas.onload = function() {
-	
-		// The concept if the current data variable is that each tile is a list, for potential efficiency with layers.
-		// ex: local.data[tile_array][layer] = tile data
-		// May not keep it this way though.
-		//for(var i = 0; i < (MAP_SIZE*MAP_SIZE); i++) {
-		//	//local.data[i] = 0;
-		//	local.data[i] = [];
-		//	local.data[i].push(0);
-			
-		//	var cell_x = i % MAP_SIZE;
-		//	var cell_y = 35-parseInt(i / MAP_SIZE);
-			
-		//	SingleDrawNS(cell_x, cell_y, 0);
-		//}
-	//}
-	
 	//---------------------------------------------------------------------------------------------------------------
-	// Single Draw (No Save)
-	//function SingleDrawNS(x, y, paint_tile, layer = 0) {
-	//	local.layers.SingleDrawNS(x, y, paint_tile, layer);
-	//}
-	//--------------------------------------------------------------
 	self.AddLayer = function() {
 		local.layers.push_back("./img/texture_atlas.png", -1);
 	}
@@ -52,41 +29,13 @@ var Level = function() {
 		local.layers.pop_back();
 	}
 	//--------------------------------------------------------------
+	self.hideShowLayer = function(layer) {
+		local.layers.hideShow(layer);
+	}
+	//--------------------------------------------------------------
 	self.UpdateWindow = function(keyPress = []) {
 		
-		/*
-		var x_diff = 0;
-		var y_diff = 0;
-		
-		if(keyPress[keys.UP_ARROW]) {
-			y_diff++;
-		} else if(keyPress[keys.DOWN_ARROW]) {
-			y_diff--;
-		}
-		
-		if(keyPress[keys.RIGHT_ARROW]) {
-			x_diff--;
-		} else if(keyPress[keys.LEFT_ARROW]) {
-			x_diff++;
-		}
-		local.imgData = local.ctx.getImageData(x_diff*TILE_SIZE, y_diff*TILE_SIZE, 1260, 700);
-		local.ctx.clearRect(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
-		
-		local.ctx.putImageData(local.imgData, 0, 0);
-		*/
-		
 		local.layers.Update();
-		
-		/*
-		
-		for(var l = 0; l < local.layers.size(); l++) {
-			for(var i = Origins.getInstance().origin_x; i < Origins.getInstance().origin_x+ VIEWPORT_TILE_WIDTH; i++) {
-				for(var j = Origins.getInstance().origin_y; j < Origins.getInstance().origin_y+ VIEWPORT_TILE_HEIGHT; j++) {
-					local.layers.SingleDrawNS(i, j, self.GetDataXY(i, j), l);
-				}
-			}
-		}
-		*/
 		
 	}
 	//--------------------------------------------------------------
@@ -256,15 +205,6 @@ var Level = function() {
 				$('#save_hide').hide();
 			}
 		});
-			
-		/*
-		$.post("./server.php", request)
-			.done( function(data) {
-				$('#message').html(data);
-				self.UpdateLvList();
-				$('#save_hide').hide();
-			});
-		*/
 	}
 	//--------------------------------------------------------------
 	self.Load = function() {
@@ -297,16 +237,6 @@ var Level = function() {
 				
 				for(var i = 0; i < (obj['data'].length-2); i++) {
 					layer.data[i] = obj['data'][i];
-					//local.data[i][0] = obj['data'][i];
-					
-					/*
-					var cell_x = i % MAP_SIZE;
-					var cell_y = parseInt(i / MAP_SIZE);
-					
-					var value = local.data[i];
-					
-					Draw(cell_x, cell_y, value, DRAW_MODE_SINGLE);
-					*/
 				}
 				self.UpdateWindow();
 				
@@ -317,39 +247,6 @@ var Level = function() {
 				$('#load_hide').hide();
 			}
 		});
-		
-		/*
-		$.post("./server.php", request)
-			.done( function(data) {
-				
-				var obj = $.parseJSON(data);
-				
-				var message = obj['message'];
-				//local.data = obj['data'];
-				
-				$('#message').html(message);
-				
-				for(var i = 0; i < (obj['data'].length-2); i++) {
-					layer.data[i] = obj['data'][i];
-					//local.data[i][0] = obj['data'][i];
-					
-					//var cell_x = i % MAP_SIZE;
-					//var cell_y = parseInt(i / MAP_SIZE);
-					
-					//var value = local.data[i];
-					
-					//Draw(cell_x, cell_y, value, DRAW_MODE_SINGLE);
-				}
-				self.UpdateWindow();
-				
-				local.start_x = obj['data'][obj['data'].length-2];
-				local.start_y = obj['data'][obj['data'].length-1];
-				
-				$('#level_name').val(cmd.lv_name);
-				$('#load_hide').hide();
-				
-			});
-		*/
 	}
 	//--------------------------------------------------------------
 }
