@@ -179,7 +179,6 @@ var Level = function() {
 		var cmd = {
 			action: 'level_save',
 			lv_name: $('#level_name').val().replace([" "], ["_"]),
-			//data: JSON.stringify(Array.from(local.layers.rtrnLayer(0).data)),
 			start_x: local.start_x,
 			start_y: local.start_y
 		};
@@ -187,10 +186,8 @@ var Level = function() {
 		$('#level_name').val(cmd.lv_name);
 		
 		var request = $.param(cmd);
-		//[dataCompressed], {type: "application/octet-stream"}
-		//var test = new Uint8Array(local.layers.rtrnLayer(0).data.buffer);
-		request += "&data=" + new TextDecoder("utf-8").decode(local.layers.rtrnLayer(0).data);;
-		alert(request);
+		
+		request += "&data=" + JSON.stringify(local.layers.ExportCompressed() );
 		
 		$.ajax({
 			'type': "POST",
@@ -200,6 +197,7 @@ var Level = function() {
 			'data': request,
 			'processData': false,
 			'success': function(data) {
+				alert(data);
 				$('#message').html(data);
 				self.UpdateLvList();
 				$('#save_hide').hide();

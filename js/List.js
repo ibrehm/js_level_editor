@@ -57,10 +57,10 @@ function List() {
 				direction = -1;
 			}
 			
-			var check = ((location >= 0) && (location < self.length));
+			//var check = ((location >= 0) && (location < self.length));
 			
-			
-			if( (front != null) && check) {
+			//if( (front != null) && check) {
+			if((location >= 0) && (location < self.length)) {
 				
 				while(true) {
 					
@@ -74,7 +74,7 @@ function List() {
 						}
 						count += direction;
 					}
-				};
+				}
 				
 			}
 			current = obj;

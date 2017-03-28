@@ -2,7 +2,8 @@
 <html>
 	<head>
 		<link rel="stylesheet" href="css/level_editor.css">
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.js"></script>	
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.js"></script>	-->
 	</head>
 <body>
 
@@ -53,6 +54,7 @@
 
 <script src="./js/include/pako/pako.min.js"></script>
 <script src="./js/List.js"></script>
+<script src="./js/DynamicBytes.js"></script>
 <script src="./js/utils.js"></script>
 <script src="./js/editor/managers.js"></script>
 <script src="./js/editor/settings.js"></script>

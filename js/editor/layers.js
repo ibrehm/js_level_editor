@@ -339,6 +339,25 @@ var LayerManager = function(){
 	// Compresses all layers and returns a binary string
 	Manager.prototype.ExportCompressed = function() {
 		
+		var combine = new DynamicBytes();
+		
+		for(var i = 0; i < this.local.layers.length; i++) {
+			// Data type
+			combine.push_back32(0);
+			
+			var compressed = pako.deflate(this.local.layers.get(i).data);
+			// Data length
+			combine.push_back32(compressed.byteLength);
+			
+			combine.append(compressed);
+		}
+		
+		//var rtrn = combine.Export8Bytes();
+		var rtrn = combine.ExportCharArray();
+		
+		alert("Size: " + rtrn.length);
+		
+		return rtrn;
 	}
 	//--------------------------------------------------------------
 	// Takes in a compressed string and builds the data for the layers

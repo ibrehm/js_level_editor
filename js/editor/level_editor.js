@@ -98,9 +98,11 @@ $(document).ready( function() {
 						
 					local.target_layer = value;
 				});
-				
+				//---------------------------------------------------------------------------------------------------------------
 				$('#layer-list').on('change', '.layer-toggle', function(event) {
 					var value = $(this).data('layer');
+					
+					$("#canvas_layer-" + value).toggle();
 				});
 				//---------------------------------------------------------------------------------------------------------------
 				$('#palette_texture').mousemove( function(event) {

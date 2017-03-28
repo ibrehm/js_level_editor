@@ -310,6 +310,9 @@ class Server {
 	}
 	//------------------------------------------------------------------------------------------------------------------------------------------
 	private function save_level() {
+	
+		/*
+	
 		$rtrn = "";
 		
 		$lv_name = $_POST['lv_name'];
@@ -330,6 +333,15 @@ class Server {
 		file_put_contents("./data/levels/" . $lv_name . ".bin", $data_write);
 		
 		return "Save successful.";
+		*/
+		
+		$data = json_decode($_POST['data']);
+		
+		$length = count($data);
+		
+		file_put_contents("./what.txt", $data);
+		
+		return "String is: " . strlen($_POST['data']) . ", Data Length: " . $length;
 	}
 	//------------------------------------------------------------------------------------------------------------------------------------------
 	private function load_level() {
