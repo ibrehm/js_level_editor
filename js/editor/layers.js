@@ -32,7 +32,6 @@ var LayerManager = function(){
 		// counter current tracks the amount of tiles drawn per screen Update
 		this.local = {
 			layers: new List(),
-			layerCount: 0,
 			counter: 0
 		}
 	};
@@ -92,7 +91,7 @@ var LayerManager = function(){
 	Manager.prototype.push_back = function(imgUrl, default_val = 0) {
 		var main = this;
 		
-		var newID = main.local.layerCount;
+		var newID = main.local.layers.length;
 		
 		$('#layer-list').append(
 			"<span class='layer-tool'>" +
@@ -107,10 +106,14 @@ var LayerManager = function(){
 			main.Update();
 		}
 		
-		this.local.layerCount++;
-		
 		return(newID);
 	};
+	//---------------------------------------------------------------------------------------------------------------
+	Manager.prototype.clear = function() {
+		$('#layer-list').html('');
+		$('#level_canvas').html('');
+		this.local.layers.Clear();
+	}
 	//---------------------------------------------------------------------------------------------------------------
 	// Deletes the most recently added layer
 	Manager.prototype.pop_back = function() {
@@ -338,14 +341,15 @@ var LayerManager = function(){
 	//--------------------------------------------------------------
 	// Compresses all layers and returns a binary string
 	Manager.prototype.ExportCompressed = function() {
-		
+		var main = this;
 		var combine = new DynamicBytes();
 		
 		for(var i = 0; i < this.local.layers.length; i++) {
 			// Data type
 			combine.push_back32(0);
 			
-			var compressed = pako.deflate(this.local.layers.get(i).data);
+			var decompressed = new Uint8Array(main.local.layers.get(i).data.buffer);
+			var compressed = pako.deflate(decompressed);
 			// Data length
 			combine.push_back32(compressed.byteLength);
 			
@@ -355,14 +359,33 @@ var LayerManager = function(){
 		//var rtrn = combine.Export8Bytes();
 		var rtrn = combine.ExportCharArray();
 		
-		alert("Size: " + rtrn.length);
-		
 		return rtrn;
 	}
 	//--------------------------------------------------------------
 	// Takes in a compressed string and builds the data for the layers
 	Manager.prototype.LoadCompressed = function(data) {
 		
+		var main = this;
+		main.clear();
+		
+		var combine = new DynamicBytes();
+		combine.appendCharArray(data);
+		
+		while(combine.eod() == false) {
+			var type = combine.get32();
+			var size = combine.get32();
+			
+			var data = combine.getUBytes(size);
+			
+			var decompressed = pako.inflate(data);
+			var layer_data = new Int32Array(decompressed.buffer);
+			
+			main.push_back("./img/texture_atlas.png");
+			
+			main.local.layers.get( main.local.layers.length-1 ).data = layer_data;
+		}
+		
+		main.Update();
 	}
 	
 	return Manager;

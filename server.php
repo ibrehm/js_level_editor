@@ -311,37 +311,39 @@ class Server {
 	//------------------------------------------------------------------------------------------------------------------------------------------
 	private function save_level() {
 	
-		/*
-	
 		$rtrn = "";
 		
 		$lv_name = $_POST['lv_name'];
-		//$data = json_decode($_POST['data']);
-		$data = $_POST['data'];
+		$data = json_decode($_POST['data']);
+		//$data = $_POST['data'];
 		$data_write = "";
 		
-		//$total = count($data);
+		$total = count($data);
 		
 		
-		//for($i = 0; $i < $total; $i++) {
-		//	$data_write .=  pack("i", $data[$i]);
-		//}
-		$data_write .= $data;
-		$data_write .= pack("i", $_POST['start_x']);
-		$data_write .= pack("i", $_POST['start_y']);
+		for($i = 0; $i < $total; $i++) {
+			$value = pack("c", $data[$i]);
+			$data_write .=  $value;
+		}
+		//$data_write .= $data;
+		//$data_write .= pack("i", $_POST['start_x']);
+		//$data_write .= pack("i", $_POST['start_y']);
 		
 		file_put_contents("./data/levels/" . $lv_name . ".bin", $data_write);
+		//file_put_contents("./test.txt", $data_write);
 		
-		return "Save successful.";
-		*/
+		return "Save successful. ";
 		
+		/*
 		$data = json_decode($_POST['data']);
 		
 		$length = count($data);
 		
-		file_put_contents("./what.txt", $data);
+		//file_put_contents("./test.txt", $data);
 		
 		return "String is: " . strlen($_POST['data']) . ", Data Length: " . $length;
+		*/
+		
 	}
 	//------------------------------------------------------------------------------------------------------------------------------------------
 	private function load_level() {
@@ -349,6 +351,7 @@ class Server {
 		$lv_name = $_POST['lv_name'];
 		
 		$response['message'] = "";
+		
 		$response['data'] = array();
 		
 		$file = "./data/levels/" . $lv_name .".bin";
@@ -359,7 +362,7 @@ class Server {
 			
 			$count = 0;
 			while(!feof($handle)) {
-				$value = @unpack("i", fread($handle, 4));
+				$value = @unpack("c", fread($handle, 1));
 				if($value != null) {
 					$response['data'][] = $value[1];
 				}
@@ -367,6 +370,7 @@ class Server {
 			$count++;
 		}
 		fclose($handle);
+		//$response['data'] = file_get_contents($file);
 		
 		$response['message'] = "Load successful.";
 		

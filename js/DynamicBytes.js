@@ -4,6 +4,8 @@
 //---------------------------------------------------------------
 function DynamicBytes() {
 	var buffer = [];
+	var iterator = 0;
+	var eod = false;
 	
 	var self = this;
 	
@@ -25,7 +27,7 @@ function DynamicBytes() {
 	
 	// Exports bytes. Each value in the array will use 1 byte each
 	self.Export8Bytes = function() {
-		var data = Int8Array.from(buffer);
+		var data = Uint8Array.from(buffer);
 		//var bytes = new Int8Array(data.buffer);
 		
 		return data;
@@ -35,12 +37,8 @@ function DynamicBytes() {
 		return buffer;
 	}
 	
-	self.set = function(num, value) {
-		buffer[num] = value;
-	}
-	
-	self.get = function(num) {
-		return buffer[num];
+	self.appendCharArray = function(array) {
+		buffer = array;
 	}
 	
 	self.append = function(array) {
@@ -83,7 +81,73 @@ function DynamicBytes() {
 	}
 	
 	self.get32 = function() {
+		var data = new Int8Array(4);
 		
+		for(var i = 0; i < data.length; i++) {
+			data[i] = buffer[iterator];
+			iterator++;
+			
+			if(iterator == buffer.length) {
+				eod = true;
+				break;
+			}
+		}
+		
+		var rtrn = new Int32Array(data.buffer);
+		
+		return rtrn[0];
+	}
+	
+	self.get16 = function() {
+		var data = new Int8Array(2);
+		
+		for(var i = 0; i < data.length; i++) {
+			data[i] = buffer[iterator];
+			iterator++;
+			
+			if(iterator == buffer.length) {
+				eod = true;
+				break;
+			}
+		}
+		
+		var rtrn = new Int16Array(data.buffer);
+		
+		return rtrn[0];
+	}
+	
+	self.get8 = function() {
+		var data = new Int8Array(1);
+		
+		for(var i = 0; i < data.length; i++) {
+			data[i] = buffer[iterator];
+			iterator++;
+			
+			if(iterator == buffer.length) {
+				eod = true;
+				break;
+			}
+		}
+		
+		var rtrn = new Int8Array(data.buffer);
+		
+		return rtrn[0];
+	}
+	
+	self.getUBytes = function(amount) {
+		var data = new Uint8Array(amount);
+		
+		for(var i = 0; i < data.length; i++) {
+			data[i] = buffer[iterator];
+			iterator++;
+			
+			if(iterator == buffer.length) {
+				eod = true;
+				break;
+			}
+		}
+		
+		return data;
 	}
 	
 	self.clear = function() {
@@ -92,6 +156,14 @@ function DynamicBytes() {
 	
 	self.length = function() {
 		return buffer.length;
+	}
+	
+	self.rewind = function() {
+		iterator = 0;
+	}
+	
+	self.eod = function() {
+		return eod;
 	}
 }
 //---------------------------------------------------------------

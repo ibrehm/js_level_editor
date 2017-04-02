@@ -197,7 +197,6 @@ var Level = function() {
 			'data': request,
 			'processData': false,
 			'success': function(data) {
-				alert(data);
 				$('#message').html(data);
 				self.UpdateLvList();
 				$('#save_hide').hide();
@@ -226,13 +225,16 @@ var Level = function() {
 			'data': request,
 			'processData': false,
 			'success': function (data) {
+				
 				var obj = $.parseJSON(data);
 				
 				var message = obj['message'];
-				//local.data = obj['data'];
 				
 				$('#message').html(message);
 				
+				local.layers.LoadCompressed(obj['data']);
+				
+				/*
 				for(var i = 0; i < (obj['data'].length-2); i++) {
 					layer.data[i] = obj['data'][i];
 				}
@@ -240,6 +242,7 @@ var Level = function() {
 				
 				local.start_x = obj['data'][obj['data'].length-2];
 				local.start_y = obj['data'][obj['data'].length-1];
+				*/
 				
 				$('#level_name').val(cmd.lv_name);
 				$('#load_hide').hide();
