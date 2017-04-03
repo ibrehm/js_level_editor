@@ -1,3 +1,4 @@
+// (C) 2017 Ian Brehm
 //-----------------------------------------------------------------------------------------------------------
 // Data object for each individual layer.
 var Layer = function(num, imgUrl, default_val = 0) {
@@ -109,6 +110,7 @@ var LayerManager = function(){
 		return(newID);
 	};
 	//---------------------------------------------------------------------------------------------------------------
+	// Clears the layers
 	Manager.prototype.clear = function() {
 		$('#layer-list').html('');
 		$('#level_canvas').html('');

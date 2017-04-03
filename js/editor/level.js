@@ -1,4 +1,6 @@
+// (C) 2017 Ian Brehm
 //-----------------------------------------------------------------------------------------------------------
+// Level.js handles level data. Maybe become obsolete as most functions have been moved into layers.js
 var Level = function() {
 	var local = {
 		data: null,

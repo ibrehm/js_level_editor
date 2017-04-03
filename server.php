@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * (C) 2017 Ian Brehm
+ * ------------------------------------------------
+ * server.php handles all the client/server communications.
+ * It handles communcations with more than the level editor.
+*/
+
 class AutoNum {
 	private $value = -1;
 	

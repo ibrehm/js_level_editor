@@ -1,4 +1,6 @@
+// (C) 2017 Ian Brehm
 //---------------------------------------------------------------------------------------------------------------
+// Level Editor mostly handles the events on the page
 $(document).ready( function() {
 	
 	var app = (function() {

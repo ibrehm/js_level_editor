@@ -1,3 +1,4 @@
+// (C) 2017 Ian Brehm
 // Returns true if a value is between a and b
 function between(value, a, b) {
 	return (value >= a) && (value <= b);
