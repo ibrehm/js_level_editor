@@ -139,7 +139,8 @@
 <script src="./js/utils.js"></script>
 <script src="./js/editor/MapObject.js"></script>
 <script src="./js/editor/managers.js"></script>
-<script src="./js/editor/layers.js"></script>
+<script src="./js/editor/layer.js"></script>
+<script src="./js/editor/layerManager.js"></script>
 <script src="./js/editor/level_editor.js"></script>
 
 </body>
