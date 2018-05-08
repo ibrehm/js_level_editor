@@ -322,8 +322,12 @@ class Server {
 		
 		$lv_name = $_POST['lv_name'];
 		$data = json_decode($_POST['data']);
-		//$data = $_POST['data'];
 		$data_write = "";
+		$save_loc = $_POST['save_loc'];
+		
+		//$data = $_POST['data'];
+		//$data = explode(",", $data);
+		//$data_write = "";
 		
 		$total = count($data);
 		
@@ -336,7 +340,8 @@ class Server {
 		//$data_write .= pack("i", $_POST['start_x']);
 		//$data_write .= pack("i", $_POST['start_y']);
 		
-		file_put_contents("./data/levels/" . $lv_name . ".bin", $data_write);
+		//file_put_contents("./data/tilemaps/" . $lv_name . ".bin", $data_write);
+		file_put_contents($save_loc . $lv_name . ".bin", $data_write);
 		//file_put_contents("./test.txt", $data_write);
 		
 		return "Save successful. ";
@@ -356,12 +361,13 @@ class Server {
 	private function load_level() {
 		
 		$lv_name = $_POST['lv_name'];
+		$save_loc = $_POST['save_loc'];
 		
 		$response['message'] = "";
 		
 		$response['data'] = array();
 		
-		$file = "./data/levels/" . $lv_name .".bin";
+		$file = $save_loc . $lv_name .".bin";
 		
 		$handle = fopen($file, "rb");
 		
@@ -386,8 +392,10 @@ class Server {
 	//------------------------------------------------------------------------------------------------------------------------------------------
 	private function level_list() {
 	
+		$save_loc = $_POST['save_loc'];
+	
 		// Scan the entire director for ogg, mp3, wav
-		$array = glob('./data/levels/*.{bin}', GLOB_BRACE);
+		$array = glob($save_loc . '*.{bin}', GLOB_BRACE);
 		// Find the amount of files
 		$length = count($array);
 		// Send message back the list was obtained
@@ -398,7 +406,7 @@ class Server {
 		
 		// For loop to add all the songs, and removing the directory path
 		
-		$search = array("./data/levels/", ".bin");
+		$search = array($save_loc, ".bin");
 		$replace = array("", "");
 		
 		for($i = 0; $i < $length; $i++) {

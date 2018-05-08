@@ -8,7 +8,8 @@ $(document).ready( function() {
 		function App() {
 			
 			var local = {
-				map: new Level(),
+				//map: new Level(),
+				map: new LayerManager(),
 				y_row: 0,
 				background: '',
 				paint_tile: 0,
@@ -16,27 +17,57 @@ $(document).ready( function() {
 				mode: 0,
 				last_x: -1,
 				last_y: -1,
-			
+				last_menu: '#file_selector',
+				
+				changes: false,
 				mousedown: false,
 				isTyping: false,
 				startPlace: false,
 				grid_display: true
 			};
 			
+			$('#obj-layer').html("<canvas id='obj-layer' class='canvas_layers' width='" + VIEWPORT_WIDTH + "' height='" + VIEWPORT_HEIGHT + "'></canvas>");
+            
+			$("#grid_overlay").append("<table>");
+            for(var i = 0; i < VIEWPORT_TILE_HEIGHT; i++) {
+				$("#grid_overlay").append("<tr>");
+				for(var j = 0; j < VIEWPORT_TILE_WIDTH; j++) {
+					$("#grid_overlay").append(
+						"<td style='padding: 0px 0px 0px 0px;" +
+						"border-bottom: 1px solid rgba(0, 0, 0, 0.45);" +
+						"border-left: 1px solid rgba(0, 0, 0, 0.45);" + 
+						"width: " + (TILE_SIZE-1) + "px;" +
+						"height: " + (TILE_SIZE-1) + "px;'" +
+						"></td>"
+					);
+				}
+				$("#grid_overlay").append("</tr>");
+            }
+            $("#grid_overlay").append("</table>");
+			
 			var self = this;
 			
 			//---------------------------------------------------------------------------------------------------------------
-			function Palette_Movement() {
-				var select = $('#palette_selector');
-					if(select.hasClass('palette_show')) {
-						select.toggleClass("palette_hidden", true);
-						select.toggleClass("palette_show", false);
+			function Menu_Movement(id) {
+				if(id != local.last_menu) {
+					last = $(local.last_menu);
+					if(last.hasClass('palette_show')) {
+						last.toggleClass("palette_hidden", true);
+						last.toggleClass("palette_show", false);
 						local.isTyping = false;
-					} else {
-						select.toggleClass("palette_hidden", false);
-						select.toggleClass("palette_show", true);
-						local.isTyping = true;
 					}
+					local.last_menu = id;
+				}
+				var select = $(id);
+				if(select.hasClass('palette_show')) {
+					select.toggleClass("palette_hidden", true);
+					select.toggleClass("palette_show", false);
+					local.isTyping = false;
+				} else {
+					select.toggleClass("palette_hidden", false);
+					select.toggleClass("palette_show", true);
+					local.isTyping = true;
+				}
 			}
 			
 			//---------------------------------------------------------------------------------------------------------------
@@ -66,7 +97,7 @@ $(document).ready( function() {
 					"width": TEXTURE_HIGHEST + "px",
 					"height": TEXTURE_HIGHEST + "px"
 				});
-				$('#palette_cover').css({
+				$('#canvas_cover,#palette_cover').css({
 					"width": TILE_SIZE-1 + "px",
 					"height": TILE_SIZE-1 + "px"
 				});
@@ -77,7 +108,7 @@ $(document).ready( function() {
 				//---------------------------------------------------------------------------------------------------------------
 				$('#selector_width').on('change', function(event) {
 					var value = $(this).val();
-					$('#palette_cover').css({
+					$('#palette_cover,#canvas_cover').css({
 						"width": (TILE_SIZE*value)-1 + "px"
 					});
 					$('#current_tile').css({
@@ -87,16 +118,37 @@ $(document).ready( function() {
 				//---------------------------------------------------------------------------------------------------------------
 				$('#selector_height').on('change', function(event) {
 					var value = $(this).val();
-					$('#palette_cover').css({
+					$('#palette_cover,#canvas_cover').css({
 						"height": (TILE_SIZE*value)-1 + "px"
 					});
 					$('#current_tile').css({
 						"height": (TILE_SIZE*value) + "px"
 					});
 				});
+                //---------------------------------------------------------------------------------------------------------------
+				$('#texture_change').on('change', function(event) {
+					var value = $(this).val();
+					$('#palette_texture').css({
+						"background-image": "url('" + IMG_LOCATIONS[NAMES[0]] + value + ".png')"
+					});
+					$('#current_tile').css({
+						"background-image": "url('" + IMG_LOCATIONS[NAMES[0]] + value + ".png')"
+					});
+                    local.map.setTexture(local.target_layer, value);
+				});
 				//---------------------------------------------------------------------------------------------------------------
 				$("#layer-list").on('change', "input:radio[name='layer-select']:checked", function(event) {
 					var value = parseInt($(this).val());
+					
+					var texture = local.map.getTexture(value);
+					$('#texture_change').val(texture);
+					$('#palette_texture').css({
+						"background-image": "url('" + IMG_LOCATIONS[NAMES[0]] + texture + ".png')"
+					});
+					
+					$('#current_tile').css({
+						"background-image": "url('" + IMG_LOCATIONS[NAMES[0]] + texture + ".png')"
+					});
 						
 					local.target_layer = value;
 				});
@@ -105,6 +157,22 @@ $(document).ready( function() {
 					var value = $(this).data('layer');
 					
 					$("#canvas_layer-" + value).toggle();
+				});
+				//---------------------------------------------------------------------------------------------------------------
+				$('#move_up').on('click', function(event) {
+					local.map.Move(local.target_layer, 'u');
+					if(local.target_layer < ($('.layer-tool').length-1)) {
+						local.target_layer++;
+						$("input[name=layer-select]").val([local.target_layer]);
+					}
+				});
+				//---------------------------------------------------------------------------------------------------------------
+				$('#move_down').on('click', function(event) {
+					local.map.Move(local.target_layer, 'd');
+					if(local.target_layer > 0) {
+						local.target_layer--;
+						$("input[name=layer-select]").val([local.target_layer]);
+					}
 				});
 				//---------------------------------------------------------------------------------------------------------------
 				$('#palette_texture').mousemove( function(event) {
@@ -127,7 +195,7 @@ $(document).ready( function() {
 					local.background = (x*-TILE_SIZE) + "px " + (y*-TILE_SIZE) + "px";
 					$('#current_tile').css({'background-position':local.background});
 					
-					Palette_Movement();
+					//Menu_Movement('#palette_selector');
 					
 				});
 				$('#palette_texture').hover(function(event) {
@@ -151,20 +219,23 @@ $(document).ready( function() {
 						
 						$('#message').html("");
 						
-						if(pressed[keys.UP_ARROW]) {
-							Origins.getInstance().origin_y++;
-						} else if(pressed[keys.DOWN_ARROW]) {
-							Origins.getInstance().origin_y--;
-						}
-						
-						if(pressed[keys.LEFT_ARROW]) {
-							Origins.getInstance().origin_x--;
-						} else if(pressed[keys.RIGHT_ARROW]) {
-							Origins.getInstance().origin_x++;
-						}
-						
-						if(pressed[keys.UP_ARROW] || pressed[keys.DOWN_ARROW] || pressed[keys.LEFT_ARROW] || pressed[keys.RIGHT_ARROW]) {
-							local.map.UpdateWindow(pressed);
+						if(NAMES[local.map.CanvasType()] == "Tilemaps") {
+							if(pressed[keys.UP_ARROW]) {
+								Origins.getInstance().origin_y++;
+							} else if(pressed[keys.DOWN_ARROW]) {
+								Origins.getInstance().origin_y--;
+							}
+							
+							if(pressed[keys.LEFT_ARROW]) {
+								Origins.getInstance().origin_x--;
+							} else if(pressed[keys.RIGHT_ARROW]) {
+								Origins.getInstance().origin_x++;
+							}
+							
+							
+							if(pressed[keys.UP_ARROW] || pressed[keys.DOWN_ARROW] || pressed[keys.LEFT_ARROW] || pressed[keys.RIGHT_ARROW]) {
+								local.map.Update();
+							}
 						}
 						
 						if(pressed[keys.D]) {
@@ -188,22 +259,20 @@ $(document).ready( function() {
 							local.map.Redo();
 						}
 						
-						if(pressed[keys.T]) {
-							local.map.ViewData();
-						}
-						
 						//$('#debug').html("<br>" + local.origin_x + ", " + local.origin_y + "<br>" + local.TilePool.length);
 						
 					}
 					
 					if(pressed[keys.ESC]) {
-						Palette_Movement();
+						Menu_Movement(local.last_menu);
+						//Menu_Movement('#palette_selector');
 					}
 					
 				});
 				//---------------------------------------------------------------------------------------------------------------
-				$('#palette_tab').on('click', function(event) {
-					Palette_Movement();
+				$('.menu_moveable').on('click', function(event) {
+					var id = "#" + $(this).parent().attr('id');
+					Menu_Movement(id);
 				});
 				//---------------------------------------------------------------------------------------------------------------
 				$(document).keyup(function(event) {
@@ -224,6 +293,7 @@ $(document).ready( function() {
 				});
 				//---------------------------------------------------------------------------------------------------------------
 				$('#load').on('click', function(event) {
+					local.map.UpdateLvList();
 					
 					if($('#load_hide').css("display") == "none") {
 						$('#load_hide').show();
@@ -256,6 +326,48 @@ $(document).ready( function() {
 					}
 				});
 				//---------------------------------------------------------------------------------------------------------------
+				$('#QuickTravelGo').on('click', function(event) {
+					var x_val = parseInt($('#GoToX').val());
+					var y_val = parseInt($('#GoToY').val());
+					
+					Origins.getInstance().origin_x = x_val;
+					Origins.getInstance().origin_y = y_val;
+					
+					local.map.Update();
+					
+					//alert('Go to: ' + x_val + ", " + y_val);
+				});
+				//---------------------------------------------------------------------------------------------------------------
+				$('#newCanvasGo').on('click', function(event) {
+					var x_val = parseInt($('#new_canvas_x').val());
+					var y_val = parseInt($('#new_canvas_y').val());
+					var type = $('#canvas_type').val();
+					
+					if(x_val < 1) {
+						x_val = 1;
+					}
+					if(y_val < 1) {
+						y_val = 1;
+					}
+					
+					if(NAMES[type] == "Tilemaps") {
+						
+					} else if(NAMES[type] == "Objects") {
+						Origins.getInstance().origin_x = -parseInt((VIEWPORT_TILE_WIDTH/2)-(x_val/2));
+						Origins.getInstance().origin_y = -parseInt((VIEWPORT_TILE_HEIGHT/2)-(y_val/2));
+					}
+					
+					local.map.clear();
+					
+					$('#level_name').val("");
+					
+					local.map.push_back(x_val, y_val, type, 0, 0);
+					
+					local.map.Update();
+					
+					//alert('Go to: ' + x_val + ", " + y_val);
+				});
+				//---------------------------------------------------------------------------------------------------------------
 				$('#grid-on-off').on('click', function(event) {
 					if(local.grid_display) {
 						$('#grid_overlay').hide();
@@ -266,7 +378,7 @@ $(document).ready( function() {
 				});
 				//---------------------------------------------------------------------------------------------------------------
 				$('#add_layer').on('click', function(event) {
-					local.map.AddLayer();
+					local.map.push_back(local.map.Width(), local.map.Height(), local.map.CanvasType(), 0, -1);
 					/*
 					$("input:radio[name='layer-select']:checked").on('change', function(event) {
 						var value = $(this).val();
@@ -281,6 +393,7 @@ $(document).ready( function() {
 				$('#remove_layer').on('click', function(event) {
 					
 					var layers = $('.layer-tool');
+					local.map.remove(local.target_layer);
 					
 					if( (layers.length-1) == local.target_layer) {
 						if(local.target_layer > 0) {
@@ -288,8 +401,7 @@ $(document).ready( function() {
 							$("input[name=layer-select]").val([local.target_layer]);
 						}
 					}
-					
-					local.map.RemoveLayer();
+					local.map.Update();
 				});
 				//---------------------------------------------------------------------------------------------------------------
 				$('#level_canvas').mousedown( function(event) {
@@ -321,6 +433,13 @@ $(document).ready( function() {
 					var x = parseInt((event.pageX-pos.left)/ TILE_SIZE )+Origins.getInstance().origin_x;
 					var y = parseInt(( (VIEWPORT_HEIGHT-1)-(event.pageY-pos.top)) / TILE_SIZE)+Origins.getInstance().origin_y;
 					
+					var one = parseInt((event.pageY-pos.top)/TILE_SIZE);
+					var two = parseInt((event.pageX-pos.left)/TILE_SIZE);
+					$('#canvas_cover').css({
+						'top': parseInt((event.pageY-pos.top)/TILE_SIZE)*TILE_SIZE-1 + "px",
+						'left': parseInt((event.pageX-pos.left)/TILE_SIZE)*TILE_SIZE + "px"
+					});
+					
 					if(local.mousedown) {
 						if( (x != local.last_x) || (y != local.last_y)) {
 							local.map.TileDraw(x, y, local.paint_tile, local.mode, local.target_layer);
@@ -329,6 +448,7 @@ $(document).ready( function() {
 						}
 					}
 					$('#debug').html("<br>X: " + x + ", Y: " + y);
+					$('#debugiii').html(one + ", " + two);
 				});
 				//---------------------------------------------------------------------------------------------------------------
 				$("#level_canvas").mousedown( function(event) {
@@ -339,11 +459,20 @@ $(document).ready( function() {
 					local.mousedown = true;
 				});
 				//---------------------------------------------------------------------------------------------------------------
+				$('#clear_test').click(function(event) {
+					local.map.clear();
+				});
+				//---------------------------------------------------------------------------------------------------------------
 				$(document).mouseup( function(event) {
 					local.mousedown = false;
 				});
 				//---------------------------------------------------------------------------------------------------------------
 				
+				if(auto_load == null) {
+					local.map.push_back(MAP_SIZE_W, MAP_SIZE_H, 0, 0, 0);
+				} else {
+					local.map.Load(auto_load);
+				}
 				local.map.UpdateLvList();
 				
 				$('#save_hide').hide();

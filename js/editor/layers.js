@@ -1,17 +1,21 @@
 // (C) 2017 Ian Brehm
 //-----------------------------------------------------------------------------------------------------------
 // Data object for each individual layer.
-var Layer = function(num, imgUrl, default_val = 0) {
+var Layer = function(width, height, num, imgNum, default_val = 0) {
 	
 	this.atlas = new Image();
-	this.atlas.src = imgUrl;
+	this.atlas.src = IMG_LOCATIONS[NAMES[0]] + imgNum + ".png";
+	this.imgNum = imgNum;
 	
 	this.ctx;
 	this.elem;
 	
-	this.drawRecord = new Int16Array( VIEWPORT_TILE_WIDTH * VIEWPORT_TILE_HEIGHT );
-	this.data = new Int32Array( MAP_SIZE * MAP_SIZE );
+	this.drawRecord = new Int32Array( VIEWPORT_TILE_WIDTH * VIEWPORT_TILE_HEIGHT );
+	this.data = new Int32Array( width * height );
+	this.above = 0;
 	this.data.fill(default_val);
+	
+	var self = this;
 	
 	for(var i = 0; i < this.drawRecord.length; i++) {
 		this.drawRecord[i] = -1;
@@ -22,6 +26,21 @@ var Layer = function(num, imgUrl, default_val = 0) {
 	);
 	this.elem = $('#canvas_layer-' + num);
 	this.ctx = this.elem[0].getContext('2d');
+	
+	this.setTexture = function(imgNum) {
+		self.atlas = new Image();
+		self.atlas.src = IMG_LOCATIONS[NAMES[0]] + imgNum + ".png";
+		self.imgNum = imgNum;
+	}
+	
+	this.UpdateElement = function(newID) {
+		self.elem = $('#canvas_layer-' + newID);
+		self.ctx = this.elem[0].getContext('2d');
+		// Reset draw record since we're changing canvas IDs
+		for(var i = 0; i < this.drawRecord.length; i++) {
+			this.drawRecord[i] = -2;
+		}
+	}
 };
 
 //-----------------------------------------------------------------------------------------------------------
@@ -32,11 +51,81 @@ var LayerManager = function(){
 		// layerCount tracks the amount of layers created (Never resets)
 		// counter current tracks the amount of tiles drawn per screen Update
 		this.local = {
+			width: 0,
+			height: 0,
+			canvas_type: 0,
 			layers: new List(),
+			undo: new List(),
+			redo: new List(),
 			counter: 0
 		}
 	};
-	
+	//---------------------------------------------------------------------------------------------------------------
+	Manager.prototype.Width = function() {
+		return parseInt(this.local.width);
+	};
+	//---------------------------------------------------------------------------------------------------------------
+	Manager.prototype.Height = function() {
+		return parseInt(this.local.height);
+	};
+	//---------------------------------------------------------------------------------------------------------------
+	Manager.prototype.CanvasType = function() {
+		return parseInt(this.local.canvas_type);
+	};
+	//---------------------------------------------------------------------------------------------------------------
+	Manager.prototype.Undo = function() {
+		var main = this;
+		if(main.local.undo.length != 0) {
+			
+			var info = main.local.undo.get(main.local.undo.length-1);
+			
+			//var cell = self.rtrn_cell(info.un_x, info.un_y);
+			var old_tile = main.GetDataXY(info.un_x, info.un_y, info.layer);
+			
+			if( (info.un_mode == DRAW_MODE_ROUND) || (info.un_mode == DRAW_MODE_SINGLE)) {
+				main.Draw(info.un_x, info.un_y, info.un_tile, DRAW_MODE_SINGLE, info.layer);
+			} else if(info.un_mode == DRAW_MODE_LINE) {
+				
+				for(var i = info.un_left; i <= info.un_right; i++) {
+					main.Draw(i, info.un_y, info.un_tile, DRAW_MODE_SINGLE, info.layer);
+				}
+			}
+			
+			info.un_tile = old_tile;
+			
+			main.local.redo.push_back(info);
+			main.local.undo.pop_back();
+		}
+	}
+	//---------------------------------------------------------------------------------------------------------------
+	Manager.prototype.Redo = function() {
+		var main = this;
+		
+		if(main.local.redo.length != 0) {
+			var info = main.local.redo.get(main.local.redo.length-1);
+			
+			//var cell = self.rtrn_cell(info.un_x, info.un_y);
+			var old_tile = main.GetDataXY(info.un_x, info.un_y, info.layer);
+			
+			if(info.un_mode == DRAW_MODE_ROUND) {
+				info.un_mode = DRAW_MODE_SINGLE;
+				main.Draw(info.un_x, info.un_y, info.un_tile, info.un_mode, info.layer);
+			} else if(info.un_mode == DRAW_MODE_LINE) {
+				
+				for(var i = info.un_left; i <= info.un_right; i++) {
+					main.Draw(i, info.un_y, info.un_tile, DRAW_MODE_SINGLE, info.layer);
+				}
+				
+			} else if(info.un_mode == DRAW_MODE_SINGLE) {
+				main.Draw(info.un_x, info.un_y, info.un_tile, info.un_mode, info.layer);
+			}
+			
+			info.un_tile = old_tile;
+			
+			main.local.undo.push_back(info);
+			main.local.redo.pop_back();
+		}
+	}
 	//---------------------------------------------------------------------------------------------------------------
 	// Obtains the last known tile drawn to a specific X/Y coordinate in a layer
 	Manager.prototype.GetTileRecord = function(x, y, layer) {
@@ -56,13 +145,16 @@ var LayerManager = function(){
 	// Updates a specific tile if the current data does not match the record
 	Manager.prototype.UpdateCanvasRegion = function(x, y, layer) {
 		// Get tile data
+        
 		var x_reverse = Origins.getInstance().origin_x + x;
-		var y_reverse = 35-(y-Origins.getInstance().origin_y);
+		
+		var y_reverse = (VIEWPORT_TILE_HEIGHT-1)-(y-Origins.getInstance().origin_y);
 		
 		var tile = this.GetDataXY(x_reverse, y_reverse, layer);
 		var view_tile = this.GetTileRecord(x, y, layer);
 		
 		if(view_tile != tile) {
+			//$('#debugiii').append("<font color=#FF0000>Drawing</font><br>");
 			this.local.counter++;
 			this.SetTileRecord(x, y, layer, tile);
 			this.SingleDrawNS(x_reverse, y_reverse, tile, layer);
@@ -71,6 +163,7 @@ var LayerManager = function(){
 	//---------------------------------------------------------------------------------------------------------------
 	// Refreshes the screen.
 	Manager.prototype.Update = function() {
+		var main = this;
 		
 		for(var layer = 0; layer < this.local.layers.length; layer++) {
 			for(var y = 0; y < VIEWPORT_TILE_HEIGHT; y++) {
@@ -79,18 +172,29 @@ var LayerManager = function(){
 				}
 			}
 		}
+		//alert(this.local.counter);
 		$('#debugii').html("Wrote " + this.local.counter + " tiles.  " + ((this.local.counter/(VIEWPORT_TILE_HEIGHT*VIEWPORT_TILE_WIDTH))*100).toFixed(2) + "%");
 		this.local.counter = 0;
 		
 	};
 	//---------------------------------------------------------------------------------------------------------------
-	Manager.prototype.hideShow = function(layer) {
-		//this.local.layers.get(layer).elem;
+	Manager.prototype.ClearUpdateRecord = function() {
+		var temp_length = VIEWPORT_TILE_WIDTH * VIEWPORT_TILE_HEIGHT;
+		for(var layer = 0; layer < this.local.layers.length; layer++) {
+			var i_layer = this.local.layers.get(layer);
+			for(var i = 0; i < i_layer.drawRecord.length; i++) {
+				i_layer.drawRecord[i] = -1;
+			}
+		}
 	}
 	//---------------------------------------------------------------------------------------------------------------
 	// Adds a new layer. The ID of the layer created is returned.
-	Manager.prototype.push_back = function(imgUrl, default_val = 0) {
+	Manager.prototype.push_back = function(width, height, type, imgNum, default_val = 0) {
 		var main = this;
+		
+		main.local.width = width;
+		main.local.height = height;
+		main.local.canvas_type = type;
 		
 		var newID = main.local.layers.length;
 		
@@ -101,20 +205,47 @@ var LayerManager = function(){
 			"</span>"
 		);
 		
-		this.local.layers.push_back(new Layer(newID, imgUrl, default_val));
+		this.local.layers.push_back(new Layer(width, height, newID, imgNum, default_val));
 		
-		this.local.layers.get(newID).atlas.onload = function() {
-			main.Update();
-		}
+		main.setTexture(newID, imgNum);
+		
+		//this.local.layers.get(newID).atlas.onload = function() {
+		//	main.Update();
+		//}
 		
 		return(newID);
 	};
 	//---------------------------------------------------------------------------------------------------------------
+    // Changes the image used for the layer
+    Manager.prototype.setTexture = function(num, imgNum) {
+		var main = this;
+		
+		var temp_layer = main.local.layers.get(num);
+		temp_layer.setTexture(imgNum);
+		
+		temp_layer.atlas.onload = function() {
+			
+			main.ClearUpdateRecord();
+			main.Update();
+		}
+    }
+    //---------------------------------------------------------------------------------------------------------------
+    // Obtains the image used for the layer
+    Manager.prototype.getTexture = function(num) {
+		var main = this;
+		
+		var temp_layer = main.local.layers.get(num);
+		
+		return(temp_layer.imgNum);
+    }
+    //---------------------------------------------------------------------------------------------------------------
 	// Clears the layers
 	Manager.prototype.clear = function() {
 		$('#layer-list').html('');
 		$('#level_canvas').html('');
 		this.local.layers.Clear();
+		this.local.undo.Clear();
+		this.local.redo.Clear();
 	}
 	//---------------------------------------------------------------------------------------------------------------
 	// Deletes the most recently added layer
@@ -131,6 +262,47 @@ var LayerManager = function(){
 		}
 	};
 	//---------------------------------------------------------------------------------------------------------------
+	// Deletes the most recently added layer
+	Manager.prototype.remove = function(num = -1) {
+		var main = this;
+		if(main.local.layers.length > 0) {
+			var deletion = main.local.layers.length-1;
+			
+			main.local.layers.get(deletion).elem.remove();
+			
+			if(num != -1) {
+				deletion = num;
+			}
+			
+			main.local.layers.remove(deletion);
+			
+			for(var i = deletion; i < main.local.layers.length; i++) {
+				main.local.layers.get(i).UpdateElement(i);
+			}
+			
+			var layerList = $('.layer-tool');
+			layerList[layerList.length-1].remove();
+		}
+	};
+	//---------------------------------------------------------------------------------------------------------------
+	Manager.prototype.Move = function(num, direction) {
+		var main = this;
+		if(direction == 'u') {
+			if(num < (main.local.layers.length-1)) {
+				main.local.layers.swap(num, num+1);
+				main.local.layers.get(num).UpdateElement(num);
+				main.local.layers.get(num+1).UpdateElement(num+1);
+			}
+		} else {
+			if(num > 0) {
+				main.local.layers.swap(num, num-1);
+				main.local.layers.get(num).UpdateElement(num);
+				main.local.layers.get(num-1).UpdateElement(num-1);
+			}
+		}
+		main.Update();
+	}
+	//---------------------------------------------------------------------------------------------------------------
 	// Returns the element (<canvas>) associated with the specified layer
 	Manager.prototype.rtrnLayer = function(num) {
 		if( (num >= 0) && (num < this.local.layers.length) ) {
@@ -145,19 +317,53 @@ var LayerManager = function(){
 	Manager.prototype.size = function() {
 		return this.local.layers.length;
 	};
+	//--------------------------------------------------------------
+	Manager.prototype.TileDraw = function(x, y, paint_tile, mode, layer) {
+		
+		var main = this;
+		
+		var x_size = $('#selector_width').val();
+		var y_size = $('#selector_height').val();
+		
+		for(var ys = 0; ys < y_size; ys++) {
+			for(var xs = 0; xs < x_size; xs++) {
+				
+				var set_tile = paint_tile+xs;
+				if(set_tile >= (TILES_PER_ROW*TILES_PER_ROW)) {
+					set_tile = (TILES_PER_ROW * TILES_PER_ROW)-1;
+				}
+				
+				var undo = main.Draw(x+xs, y-ys, set_tile, mode, layer);
+				main.local.redo.Clear();
+				
+				if(undo != null) {
+					main.local.undo.push_back(undo);
+					if(main.local.undo.length > MAX_UNDO) {
+						main.local.undo.remove(0);
+					}
+				}
+			}
+			paint_tile += TILES_PER_ROW;
+		}
+	}
 	//---------------------------------------------------------------------------------------------------------------
 	// Single Draw No Save. Draws a single tile to a canvas without touching the data.
 	Manager.prototype.SingleDrawNS = function(x, y, paint_tile, layer) {
 		var main = this;
 		// Position of the tile relative to the canvas
+        
+        //alert("X: " + x + ", Y: " + y);
+        
 		var x_correct = x-Origins.getInstance().origin_x;
-		var y_correct = 35-(y-Origins.getInstance().origin_y);
+		var y_correct = (VIEWPORT_TILE_HEIGHT-1)-(y-Origins.getInstance().origin_y);
+        
+        //alert ("X Correct: " + x_correct + ", Y Correct: " + y_correct);
 		
 		if(main.local.layers.length >= layer) {
 				
 			main.local.layers.get(layer).ctx.clearRect(x_correct*TILE_SIZE, y_correct*TILE_SIZE, TILE_SIZE, TILE_SIZE);
 
-			if( ( (x >= 0) && (x < MAP_SIZE) ) && ( (y >= 0) && (y < MAP_SIZE) ) ) {
+			if( ( (x >= 0) && (x < main.local.width) ) && ( (y >= 0) && (y < main.local.height) ) ) {
 				
 				if(paint_tile >= 0) {
 					var tile_x = paint_tile % TILES_PER_ROW;
@@ -168,9 +374,9 @@ var LayerManager = function(){
 				}
 				this.SetTileRecord(x_correct, y_correct, layer, paint_tile);
 				
-				if(x == main.local.start_x && y == main.local.start_y) {
-					main.local.layers.get(layer).ctx.drawImage(main.local.start_img, 0, 0, TILE_SIZE, TILE_SIZE, x_correct*TILE_SIZE, y_correct*TILE_SIZE, TILE_SIZE, TILE_SIZE);
-				}
+				//if(x == main.local.start_x && y == main.local.start_y) {
+				//	main.local.layers.get(layer).ctx.drawImage(main.local.start_img, 0, 0, TILE_SIZE, TILE_SIZE, x_correct*TILE_SIZE, y_correct*TILE_SIZE, TILE_SIZE, TILE_SIZE);
+				//}
 			}
 		}
 	};
@@ -181,12 +387,12 @@ var LayerManager = function(){
 		var main = this;
 		var rtrn_undo;
 		
-		if( ( (x >= 0) && (x < MAP_SIZE) ) && ( (y >= 0) && (y < MAP_SIZE) ) ) {
+		if( ( (x >= 0) && (x < main.local.width) ) && ( (y >= 0) && (y < main.local.height) ) ) {
 			
 			var tile = main.GetDataXY(x, y, layer);
 			
-			var x_correct = x-Origins.getInstance().origin_x;
-			var y_correct = 35-(y-Origins.getInstance().origin_y);
+			//var x_correct = x-Origins.getInstance().origin_x;
+			//var y_correct = (VIEWPORT_TILE_HEIGHT-1)-(y-Origins.getInstance().origin_y);
 
 			if(mode == DRAW_MODE_LINE || mode == DRAW_MODE_SINGLE || mode == DRAW_MODE_ERASE) {
 				
@@ -208,49 +414,53 @@ var LayerManager = function(){
 			
 			if(mode == DRAW_MODE_LINE) {
 				
-				var max_right = x;
-				var max_left = x;
-				
-				// Filling right
-				for(var i = (x+1); i < MAP_SIZE; i++) {
-					if(main.GetDataXY(i, y, layer) == tile) {
-						main.SetDataXY(i, y, paint_tile, layer);
-						
-						var tile_x = paint_tile % TILES_PER_ROW;
-						var tile_y = parseInt(paint_tile / TILES_PER_ROW);
-						
-						main.SingleDrawNS(i, y, paint_tile, layer);
-						
-						max_right++;
-					} else {
-						break;
+				if(tile != paint_tile) {
+					var max_right = x;
+					var max_left = x;
+					
+					// Filling right
+					for(var i = (x+1); i < main.local.width; i++) {
+						if(main.GetDataXY(i, y, layer) == tile) {
+							main.SetDataXY(i, y, paint_tile, layer);
+							
+							var tile_x = paint_tile % TILES_PER_ROW;
+							var tile_y = parseInt(paint_tile / TILES_PER_ROW);
+							
+							main.SingleDrawNS(i, y, paint_tile, layer);
+							
+							max_right++;
+						} else {
+							break;
+						}
 					}
-				}
-				// Filling left
-				for(var i = (x-1); i >= 0; i--) {
-					if(main.GetDataXY(i, y, layer) == tile) {
-						main.SetDataXY(i, y, paint_tile, layer);
-						
-						var tile_x = paint_tile % TILES_PER_ROW;
-						var tile_y = parseInt(paint_tile / TILES_PER_ROW);
-						
-						main.SingleDrawNS(i, y, paint_tile, layer);
-						
-						max_left--;
-					} else {
-						break;
+					// Filling left
+					for(var i = (x-1); i >= 0; i--) {
+						if(main.GetDataXY(i, y, layer) == tile) {
+							main.SetDataXY(i, y, paint_tile, layer);
+							
+							var tile_x = paint_tile % TILES_PER_ROW;
+							var tile_y = parseInt(paint_tile / TILES_PER_ROW);
+							
+							main.SingleDrawNS(i, y, paint_tile, layer);
+							
+							max_left--;
+						} else {
+							break;
+						}
 					}
+					
+					rtrn_undo = {
+						un_y: y,
+						un_x: x,
+						un_left: max_left,
+						un_right: max_right,
+						un_tile: tile,
+						un_mode: mode,
+						layer: layer
+					};
+				} else {
+					rtrn_undo = null;
 				}
-				
-				rtrn_undo = {
-					un_y: y,
-					un_x: x,
-					un_left: max_left,
-					un_right: max_right,
-					un_tile: tile,
-					un_mode: mode,
-					layer: layer
-				};
 				
 			} else if(mode == DRAW_MODE_ROUND) {
 				
@@ -326,8 +536,9 @@ var LayerManager = function(){
 	//---------------------------------------------------------------------------------------------------------------
 	// Obtains the tile ID at a specific X/Y coordinate
 	Manager.prototype.GetDataXY = function(x, y, layer) {
-		if( (x >= 0 && x < MAP_SIZE) && (y >= 0 && y < MAP_SIZE) ) {
-			var location = x+(y*MAP_SIZE);
+		var main = this;
+		if( (x >= 0 && x < main.local.width) && (y >= 0 && y < main.local.height) ) {
+			var location = x+(y*main.local.width);
 			return this.local.layers.get(layer).data[location];
 		}
 		return -1;
@@ -335,23 +546,165 @@ var LayerManager = function(){
 	//--------------------------------------------------------------
 	// Sets the tile ID at a specific X/Y coordinate
 	Manager.prototype.SetDataXY = function(x, y, num, layer) {
-		if( (x >= 0 && x < MAP_SIZE) && (y >= 0 && y < MAP_SIZE) ) {
-			var location = x+(y*MAP_SIZE);
+		var main = this;
+		if( (x >= 0 && x < main.local.width) && (y >= 0 && y < main.local.height) ) {
+			var location = x+(y*main.local.width);
 			this.local.layers.get(layer).data[location] = num;
 		}
 	};
+	//--------------------------------------------------------------
+	Manager.prototype.UpdateLvList = function() {
+		var cmd = {
+			action: 'level_list',
+			save_loc: DATA_LOCATIONS[NAMES[$('#canvas_type').val()]]
+		};
+		
+		var request = $.param(cmd);
+		
+		$.post("./server.php", request)
+			.then( function(data) {
+				
+				var obj = $.parseJSON(data);
+				
+				var list = obj.list;
+				
+				var html = "";
+				
+				for(var i = 0; i < list.length; i++) {
+					html += "<option value='" + list[i] + "'";
+					
+					if(list[i] == $('#level_name').val()) {
+						html += " selected";
+					}
+					
+					html += ">" + list[i] + "</option>";
+				}
+				
+				$('#level_list').html(html);
+				
+			});
+	}
+	//--------------------------------------------------------------
+	Manager.prototype.Save = function() {
+		var main = this;
+		
+		var cmd = {
+			action: 'level_save',
+			lv_name: $('#level_name').val().replace([" "], ["_"]),
+			canvas_type: main.local.canvas_type,
+			save_loc: DATA_LOCATIONS[NAMES[main.local.canvas_type]]
+		};
+		// Update level name field in case changes were made
+		$('#level_name').val(cmd.lv_name);
+		
+		var request = $.param(cmd);
+		
+		var data = JSON.stringify(main.ExportCompressed());
+		//var data = main.ExportCompressed();
+		
+		//alert(data);
+		
+		request += "&data=" + data;
+		//alert(data.length);
+		
+		$.ajax({
+			'type': "POST",
+			'global': false,
+			'dataType': 'text',
+			'url': "./server.php",
+			'data': request,
+			'processData': true,
+			'success': function(data) {
+				$('#message').html(data);
+				main.UpdateLvList();
+				$('#save_hide').hide();
+			}
+		});
+		
+	}
+	//--------------------------------------------------------------
+	Manager.prototype.Load = function(str = "") {
+		
+		var main = this;
+		
+		if(str == "") {
+			str = $('#level_list').val();
+		}
+		
+		var cmd = {
+			action: 'level_load',
+			lv_name: str,
+			save_loc: DATA_LOCATIONS[NAMES[$('#canvas_type').val()]]
+		};
+		
+		var request = $.param(cmd);
+		//var layer = main.local.layers.rtrnLayer(0);
+		
+		$.ajax({
+			'type': "POST",
+			'global': false,
+			'dataType': 'text',
+			'url': "./server.php",
+			'data': request,
+			'processData': false,
+			'success': function (data) {
+				
+				var obj = $.parseJSON(data);
+				
+				var message = obj['message'];
+				
+				$('#message').html(message);
+				
+				main.LoadCompressed(obj['data']);
+				
+				if(NAMES[main.CanvasType()] == "Objects") {
+					Origins.getInstance().origin_x = -parseInt((VIEWPORT_TILE_WIDTH/2)-( main.Width() /2));
+					Origins.getInstance().origin_y = -parseInt((VIEWPORT_TILE_HEIGHT/2)-( main.Height() /2));
+					main.Update();
+				}
+				
+				/*
+				for(var i = 0; i < (obj['data'].length-2); i++) {
+					layer.data[i] = obj['data'][i];
+				}
+				self.UpdateWindow();
+				*/
+				
+				$('#level_name').val(cmd.lv_name);
+				$('#load_hide').hide();
+			}
+		});
+	}
 	//--------------------------------------------------------------
 	// Compresses all layers and returns a binary string
 	Manager.prototype.ExportCompressed = function() {
 		var main = this;
 		var combine = new DynamicBytes();
 		
+		combine.push_back16(main.local.width);
+		combine.push_back16(main.local.height);
+		combine.push_back8(main.local.canvas_type);
+		combine.push_back16(this.local.layers.length);
+		
+		for(var i = 0; i < LINK_TOTAL; i++) {
+			var str = "#map_link_" + i;
+			var value = $(str).val();
+			combine.push_back16(value);
+		}
+		
 		for(var i = 0; i < this.local.layers.length; i++) {
-			// Data type
-			combine.push_back32(0);
 			
-			var decompressed = new Uint8Array(main.local.layers.get(i).data.buffer);
-			var compressed = pako.deflate(decompressed);
+			var temp_layer = main.local.layers.get(i);
+			// Store texture/tilemap number
+			combine.push_back16(temp_layer.imgNum);
+			combine.push_back8(temp_layer.above);
+			
+			// # My Compression
+			var compressed = MapCompress.deflate(temp_layer.data);
+			
+			// # Pako decompression
+			//var decompressed = new Uint8Array(main.local.layers.get(i).data.buffer);
+			//var compressed = pako.deflate(decompressed);
 			// Data length
 			combine.push_back32(compressed.byteLength);
 			
@@ -373,19 +726,56 @@ var LayerManager = function(){
 		var combine = new DynamicBytes();
 		combine.appendCharArray(data);
 		
+		var width =  combine.get16();
+		var height = combine.get16();
+		var type = combine.get8();
+		var layers = combine.get16();
+		
+		for(var i = 0; i < LINK_TOTAL; i++) {
+			var value = combine.get16();
+			var str = "#map_link_" + i;
+			$(str).val(value);
+		}
+		
+		for(var i = 0; i < layers; i++) {
+			
+			var tilemap = combine.get16();
+			var above = combine.get8();
+			var size = combine.get32();
+			var data = combine.getUBytes(size);
+			var length = (width * height);
+			
+			// # Pako decompression
+			//var decompressed = pako.inflate(data);
+			//var layer_data = new Int32Array(decompressed.buffer);
+			// # My decompression
+			var layer_data = MapCompress.inflate(data, length);
+			
+			main.push_back(width, height, type, tilemap);
+			
+			var layer = main.local.layers.get( main.local.layers.length-1 );
+			
+			layer.data = layer_data;
+			layer.above = above;
+		}
+		/*
 		while(combine.eod() == false) {
 			var type = combine.get32();
 			var size = combine.get32();
 			
 			var data = combine.getUBytes(size);
 			
-			var decompressed = pako.inflate(data);
-			var layer_data = new Int32Array(decompressed.buffer);
+			// # Pako decompression
+			//var decompressed = pako.inflate(data);
+			//var layer_data = new Int32Array(decompressed.buffer);
+			// # My decompression
+			var layer_data = MapCompress.inflate(data);
 			
 			main.push_back("./img/texture_atlas.png");
 			
 			main.local.layers.get( main.local.layers.length-1 ).data = layer_data;
 		}
+		*/
 		
 		main.Update();
 	}

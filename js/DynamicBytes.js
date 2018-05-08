@@ -42,6 +42,17 @@ function DynamicBytes() {
 	self.ExportCharArray = function() {
 		return buffer;
 	}
+	//--------------------------------------------------------------------------------
+	// Export the array in a fully binary, non-human readable form
+	self.ExportAsBin = function() {
+		var rtrn = "";
+		for(var i = 0; i < buffer.length; i++) {
+			rtrn += String.fromCharCode(buffer[i]);
+			//rtrn += buffer[i];
+		}
+		
+		return rtrn;
+	}
 	
 	//--------------------------------------------------------------------------------
 	// Import a non-typed array as is

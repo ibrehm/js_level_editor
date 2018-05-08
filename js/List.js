@@ -221,6 +221,13 @@ function List() {
 		this.remove(0);
 	}
 	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+	// Swaps elements
+	self.swap = function(one, two) {
+		var temp = GetObj(one).data;
+		GetObj(one).data = GetObj(two).data;
+		GetObj(two).data = temp;
+	}
+	//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
 	// Deletes all data
 	self.Clear = function() {
 		while(this.length > 0) {

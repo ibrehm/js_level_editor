@@ -51,14 +51,21 @@
 	z-index: 0;
 }
 
+#layer-list {
+	width: 280px;
+	height: 300px;
+	overflow-y: scroll;
+}
+
 #container {
 	position: absolute;
-	top: 0px;
+	top: 20px;
 	left: 0px;
+	overflow: hidden;
 }
 
 #palette_texture {
-	background-image: url('../img/texture_atlas.png');
+	background-image: url('../img/tilemaps/0.png');
 	overflow: hidden;
 }
 
@@ -72,25 +79,31 @@
 	pointer-events: none;
 }
 
+#canvas_cover {
+	position: relative;
+	top: 0px;
+	left: 0px;
+	border-style: solid;
+	border-width: 1px;
+	background-color: rgba(255, 0, 0, 0.25);
+	pointer-events: none;
+}
+
 #canvas_container {
 	position: relative;
-	width: 1280px;
-	height: 720px;
 	overflow: hidden;
 	background-image: url( '../img/background_grid.png' );
 	background-position: left bottom;
 }
 
 #current_tile {
-	position: absolute;
-	bottom: 0px;
+	position: relative;
+	/*bottom: 0px;
 	left: 0px;
-	z-index: 100;
+	z-index: 100;*/
 	border-style: solid;
 	border-width: 1px;
-	width: 20px;
-	height: 20px;
-	background-image: url( '../img/texture_atlas.png' );
+	background-image: url( '../img/tilemaps/0.png' );
 }
 
 #grid_overlay {
@@ -99,10 +112,19 @@
 	left: 0px;
 	width: 1280px;
 	height: 720px;
-	background-image: url( '../img/foreground_grid.png' );
+	/* background-image: url( '../img/foreground_grid.png' ); */
 	background-position: left bottom;
 	z-index: 1;
 	pointer-events: none;
+}
+
+#file_tab {
+	position: absolute;
+	top: 517px;
+	left: 0px;
+	width: 80px;
+	height: 20px;
+	background-image: url('../img/file_tab.png');
 }
 
 #palette_tab {
@@ -112,6 +134,33 @@
 	width: 80px;
 	height: 20px;
 	background-image: url('../img/palette_tab.png');
+}
+
+#links_tab {
+	position: absolute;
+	top: 517px;
+	left: 0px;
+	width: 80px;
+	height: 20px;
+	background-image: url('../img/links_tab.png');
+}
+
+#objects_tab {
+	position: absolute;
+	top: 517px;
+	left: 0px;
+	width: 80px;
+	height: 20px;
+	background-image: url('../img/objects_tab.png');
+}
+
+#presets_tab {
+	position: absolute;
+	top: 517px;
+	left: 0px;
+	width: 80px;
+	height: 20px;
+	background-image: url('../img/presets_tab.png');
 }
 
 /* ------------------------------------------------------------------- */
@@ -141,14 +190,63 @@
 	z-index: 2;
 }
 
+.menu_moveable {
+	
+}
+
+.file_settings {
+	display: block;
+	position: absolute;
+	top: -517px;
+	left: 0px;
+	width: 800px;
+	height: 517px;
+	background-color: #FFFFFF;
+	z-index: 102;
+}
+
 .palette_settings {
 	display: flex;
 	position: absolute;
 	top: -517px;
+	left: 80px;
 	width: 800px;
 	height: 517px;
 	background-color: #FFFFFF;
-	z-index: 2;
+	z-index: 101;
+}
+
+.links_settings {
+	display: block;
+	position: absolute;
+	top: -517px;
+	left: 160px;
+	width: 800px;
+	height: 517px;
+	background-color: #FFFFFF;
+	z-index: 100;
+}
+
+.objects_settings {
+	display: block;
+	position: absolute;
+	top: -517px;
+	left: 240px;
+	width: 800px;
+	height: 517px;
+	background-color: #FFFFFF;
+	z-index: 99;
+}
+
+.presets_settings {
+	display: block;
+	position: absolute;
+	top: -517px;
+	left: 320px;
+	width: 800px;
+	height: 517px;
+	background-color: #FFFFFF;
+	z-index: 98;
 }
 
 
