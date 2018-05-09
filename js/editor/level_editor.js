@@ -69,22 +69,6 @@ $(document).ready( function() {
 					local.isTyping = true;
 				}
 			}
-			
-			//---------------------------------------------------------------------------------------------------------------
-			/*
-			function UpdatePalette(row = 0) {
-				$('#palette').html("");
-				for(var x = 0; x < TILES_PER_ROW; x++) {
-					$('#palette').append("<div class='atlas' data-tile='" + ((row*TILES_PER_ROW) + x) + "' style='background-position: " + (-x * TILE_SIZE) + "px " + (-row * TILE_SIZE) + "px;'></div>");
-				}
-				$('.atlas').on('click', function(event) {
-					local.paint_tile = $(this).data('tile');
-					local.background = $(this).css('background-position');
-					//alert(local.paint_tile);
-					$('#current_tile').css({'background-position':local.background});
-				});
-			}
-			*/
 			//---------------------------------------------------------------------------------------------------------------
 			self.init = function() {
 				
@@ -259,13 +243,10 @@ $(document).ready( function() {
 							local.map.Redo();
 						}
 						
-						//$('#debug').html("<br>" + local.origin_x + ", " + local.origin_y + "<br>" + local.TilePool.length);
-						
 					}
 					
 					if(pressed[keys.ESC]) {
 						Menu_Movement(local.last_menu);
-						//Menu_Movement('#palette_selector');
 					}
 					
 				});
@@ -334,8 +315,6 @@ $(document).ready( function() {
 					Origins.getInstance().origin_y = y_val;
 					
 					local.map.Update();
-					
-					//alert('Go to: ' + x_val + ", " + y_val);
 				});
 				//---------------------------------------------------------------------------------------------------------------
 				$('#newCanvasGo').on('click', function(event) {
@@ -364,8 +343,6 @@ $(document).ready( function() {
 					local.map.push_back(x_val, y_val, type, 0, 0);
 					
 					local.map.Update();
-					
-					//alert('Go to: ' + x_val + ", " + y_val);
 				});
 				//---------------------------------------------------------------------------------------------------------------
 				$('#grid-on-off').on('click', function(event) {
@@ -379,15 +356,6 @@ $(document).ready( function() {
 				//---------------------------------------------------------------------------------------------------------------
 				$('#add_layer').on('click', function(event) {
 					local.map.push_back(local.map.Width(), local.map.Height(), local.map.CanvasType(), 0, -1);
-					/*
-					$("input:radio[name='layer-select']:checked").on('change', function(event) {
-						var value = $(this).val();
-						
-						alert(value);
-						
-						local.target_layer = value;
-					});
-					*/
 				});
 				//---------------------------------------------------------------------------------------------------------------
 				$('#remove_layer').on('click', function(event) {
@@ -455,7 +423,6 @@ $(document).ready( function() {
 					
 					event.preventDefault();
 					$("#level_name").blur();
-// 					$('#message').html("");
 					local.mousedown = true;
 				});
 				//---------------------------------------------------------------------------------------------------------------

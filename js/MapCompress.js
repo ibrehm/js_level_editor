@@ -1,6 +1,7 @@
 function Compress() {
 	var self = this;
 	
+	//----------------------------------------------------------------------------------------
 	self.deflate = function(data) {
 		
 		var temp = new DynamicBytes();
@@ -33,7 +34,7 @@ function Compress() {
 		return rtrn;
 		
 	};
-	
+	//----------------------------------------------------------------------------------------
 	self.inflate = function(data, length) {
 		var rtrn = new Int16Array( length );
 		var iterator = 0;
@@ -53,5 +54,6 @@ function Compress() {
 		
 		return rtrn;
 	}
+	//----------------------------------------------------------------------------------------
 }
 var MapCompress = new Compress();

@@ -38,7 +38,7 @@ var DRAW_MODE_ERASE = 3;
 
 // Canvas/Viewport settings
 
-var VIEWPORT_WIDTH = 1280;//parseInt(screen.width/TILE_SIZE)*TILE_SIZE;
+var VIEWPORT_WIDTH = 1280;
 var VIEWPORT_HEIGHT = 720;
 
 if( (VIEWPORT_WIDTH % TILE_SIZE) != 0 ) {

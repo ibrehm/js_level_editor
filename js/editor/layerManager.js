@@ -29,13 +29,13 @@ var LayerManager = function(){
 		return parseInt(this.local.canvas_type);
 	};
 	//---------------------------------------------------------------------------------------------------------------
+	// Keeps track of the possible undo's the user can do
 	Manager.prototype.Undo = function() {
 		var main = this;
 		if(main.local.undo.length != 0) {
 			
 			var info = main.local.undo.get(main.local.undo.length-1);
 			
-			//var cell = self.rtrn_cell(info.un_x, info.un_y);
 			var old_tile = main.GetDataXY(info.un_x, info.un_y, info.layer);
 			
 			if( (info.un_mode == DRAW_MODE_ROUND) || (info.un_mode == DRAW_MODE_SINGLE)) {
@@ -54,13 +54,13 @@ var LayerManager = function(){
 		}
 	}
 	//---------------------------------------------------------------------------------------------------------------
+	// Keeps track of the possible redo's the user can do after using the undo function
 	Manager.prototype.Redo = function() {
 		var main = this;
 		
 		if(main.local.redo.length != 0) {
 			var info = main.local.redo.get(main.local.redo.length-1);
 			
-			//var cell = self.rtrn_cell(info.un_x, info.un_y);
 			var old_tile = main.GetDataXY(info.un_x, info.un_y, info.layer);
 			
 			if(info.un_mode == DRAW_MODE_ROUND) {
@@ -308,12 +308,8 @@ var LayerManager = function(){
 		var main = this;
 		// Position of the tile relative to the canvas
         
-        //alert("X: " + x + ", Y: " + y);
-        
 		var x_correct = x-Origins.getInstance().origin_x;
 		var y_correct = (VIEWPORT_TILE_HEIGHT-1)-(y-Origins.getInstance().origin_y);
-        
-        //alert ("X Correct: " + x_correct + ", Y Correct: " + y_correct);
 		
 		if(main.local.layers.length >= layer) {
 				
@@ -325,14 +321,9 @@ var LayerManager = function(){
 					var tile_x = paint_tile % TILES_PER_ROW;
 					var tile_y = parseInt(paint_tile / TILES_PER_ROW);
 				
-					//main.local.ctx.putImageData(main.local.atlasData, (x_correct*TILE_SIZE)-(paint_tile*TILE_SIZE), (y_correct*TILE_SIZE), (tile_x*TILE_SIZE), (tile_y*TILE_SIZE), TILE_SIZE, TILE_SIZE);
 					main.local.layers.get(layer).ctx.drawImage(main.local.layers.get(layer).atlas, tile_x*TILE_SIZE, tile_y*TILE_SIZE, TILE_SIZE, TILE_SIZE, x_correct*TILE_SIZE, y_correct*TILE_SIZE, TILE_SIZE, TILE_SIZE);
 				}
 				this.SetTileRecord(x_correct, y_correct, layer, paint_tile);
-				
-				//if(x == main.local.start_x && y == main.local.start_y) {
-				//	main.local.layers.get(layer).ctx.drawImage(main.local.start_img, 0, 0, TILE_SIZE, TILE_SIZE, x_correct*TILE_SIZE, y_correct*TILE_SIZE, TILE_SIZE, TILE_SIZE);
-				//}
 			}
 		}
 	};
@@ -346,9 +337,6 @@ var LayerManager = function(){
 		if( ( (x >= 0) && (x < main.local.width) ) && ( (y >= 0) && (y < main.local.height) ) ) {
 			
 			var tile = main.GetDataXY(x, y, layer);
-			
-			//var x_correct = x-Origins.getInstance().origin_x;
-			//var y_correct = (VIEWPORT_TILE_HEIGHT-1)-(y-Origins.getInstance().origin_y);
 
 			if(mode == DRAW_MODE_LINE || mode == DRAW_MODE_SINGLE || mode == DRAW_MODE_ERASE) {
 				
@@ -556,12 +544,8 @@ var LayerManager = function(){
 		var request = $.param(cmd);
 		
 		var data = JSON.stringify(main.ExportCompressed());
-		//var data = main.ExportCompressed();
-		
-		//alert(data);
 		
 		request += "&data=" + data;
-		//alert(data.length);
 		
 		$.ajax({
 			'type': "POST",
@@ -594,7 +578,6 @@ var LayerManager = function(){
 		};
 		
 		var request = $.param(cmd);
-		//var layer = main.local.layers.rtrnLayer(0);
 		
 		$.ajax({
 			'type': "POST",
@@ -618,13 +601,6 @@ var LayerManager = function(){
 					Origins.getInstance().origin_y = -parseInt((VIEWPORT_TILE_HEIGHT/2)-( main.Height() /2));
 					main.Update();
 				}
-				
-				/*
-				for(var i = 0; i < (obj['data'].length-2); i++) {
-					layer.data[i] = obj['data'][i];
-				}
-				self.UpdateWindow();
-				*/
 				
 				$('#level_name').val(cmd.lv_name);
 				$('#load_hide').hide();
@@ -658,16 +634,12 @@ var LayerManager = function(){
 			// # My Compression
 			var compressed = MapCompress.deflate(temp_layer.data);
 			
-			// # Pako decompression
-			//var decompressed = new Uint8Array(main.local.layers.get(i).data.buffer);
-			//var compressed = pako.deflate(decompressed);
 			// Data length
 			combine.push_back32(compressed.byteLength);
 			
 			combine.append(compressed);
 		}
 		
-		//var rtrn = combine.Export8Bytes();
 		var rtrn = combine.ExportCharArray();
 		
 		return rtrn;
@@ -701,9 +673,6 @@ var LayerManager = function(){
 			var data = combine.getUBytes(size);
 			var length = (width * height);
 			
-			// # Pako decompression
-			//var decompressed = pako.inflate(data);
-			//var layer_data = new Int32Array(decompressed.buffer);
 			// # My decompression
 			var layer_data = MapCompress.inflate(data, length);
 			
@@ -714,24 +683,6 @@ var LayerManager = function(){
 			layer.data = layer_data;
 			layer.above = above;
 		}
-		/*
-		while(combine.eod() == false) {
-			var type = combine.get32();
-			var size = combine.get32();
-			
-			var data = combine.getUBytes(size);
-			
-			// # Pako decompression
-			//var decompressed = pako.inflate(data);
-			//var layer_data = new Int32Array(decompressed.buffer);
-			// # My decompression
-			var layer_data = MapCompress.inflate(data);
-			
-			main.push_back("./img/texture_atlas.png");
-			
-			main.local.layers.get( main.local.layers.length-1 ).data = layer_data;
-		}
-		*/
 		
 		main.Update();
 	}
