@@ -1,4 +1,4 @@
-// (C) 2017 Ian Brehm
+// (C) 2018 Ian Brehm
 //---------------------------------------------------------------
 // A Linked List library. Usage example:
 //

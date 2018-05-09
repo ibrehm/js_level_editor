@@ -1,4 +1,4 @@
-// (C) 2017 Ian Brehm
+// (C) 2018 Ian Brehm
 //-----------------------------------------------------------------------------------------------------------
 // Data object for each individual layer.
 var Layer = function(width, height, num, imgNum, default_val = 0) {

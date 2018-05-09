@@ -1,3 +1,11 @@
+// (C) 2018 Ian Brehm
+//-----------------------------------------------------------------------------------------------------------
+/*
+ * The Compress object is designed for use with the 2D game levels created with this web app. It basically
+ * totals up repeating tiles of the same ID and store them in a binary string. Generally sees around 75%
+ * compression compared to files that didn't use any compression.
+ */
+//-----------------------------------------------------------------------------------------------------------
 function Compress() {
 	var self = this;
 	

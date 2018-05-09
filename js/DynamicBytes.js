@@ -1,7 +1,7 @@
 //---------------------------------------------------------------
 // A dynamic array library. It is designed to combine arrays and data
 // and export them as various typed arrays with little hassle.
-// (C) 2017 Ian Brehm
+// (C) 2018 Ian Brehm
 //---------------------------------------------------------------
 function DynamicBytes() {
 	var buffer = [];

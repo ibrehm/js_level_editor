@@ -1,7 +1,7 @@
 <?php
 
 /*
- * (C) 2017 Ian Brehm
+ * (C) 2018 Ian Brehm
  * ------------------------------------------------
  * server.php handles all the client/server communications.
  * It handles communcations with more than the level editor.
